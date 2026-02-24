@@ -1,0 +1,167 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_arb_fixed",
+    srcs = ["br_arb_fixed.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_fixed_internal",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+verilog_library(
+    name = "br_arb_lru",
+    srcs = ["br_arb_lru.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_lru_internal",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_unused",
+    ],
+)
+
+verilog_library(
+    name = "br_arb_rr",
+    srcs = ["br_arb_rr.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_rr_internal",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_arb_grant_hold",
+    srcs = ["br_arb_grant_hold.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_arb_pri_rr",
+    srcs = ["br_arb_pri_rr.sv"],
+    deps = [
+        "//arb/rtl/internal:br_rr_state_internal",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_arb_weighted_rr",
+    srcs = ["br_arb_weighted_rr.sv"],
+    deps = [
+        "//arb/rtl:br_arb_pri_rr",
+        "//counter/rtl:br_counter",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+    ],
+)
+
+verilog_library(
+    name = "br_arb_multi_rr",
+    srcs = ["br_arb_multi_rr.sv"],
+    deps = [
+        "//enc/rtl:br_enc_countones",
+        "//enc/rtl:br_enc_priority_dynamic",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//mux/rtl:br_mux_bin",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_fixed_test_suite",
+    params = {"NumRequesters": [
+        "1",
+        "2",
+        "5",
+    ]},
+    deps = [":br_arb_fixed"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_lru_test_suite",
+    params = {"NumRequesters": [
+        "1",
+        "2",
+        "5",
+    ]},
+    deps = [":br_arb_lru"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_rr_test_suite",
+    params = {"NumRequesters": [
+        "1",
+        "2",
+        "5",
+    ]},
+    deps = [":br_arb_rr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_grant_hold_test_suite",
+    params = {"NumRequesters": [
+        "2",
+        "5",
+    ]},
+    deps = [":br_arb_grant_hold"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_pri_rr_test_suite",
+    params = {
+        "NumRequesters": [
+            "2",
+            "5",
+        ],
+        "NumPriorities": [
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_arb_pri_rr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_weighted_rr_test_suite",
+    params = {
+        "NumRequesters": [
+            "1",
+            "2",
+            "5",
+        ],
+        "MaxAccumulatedWeight": [
+            "8",
+        ],
+        "MaxWeight": [
+            "2",
+            "5",
+        ],
+    },
+    deps = [":br_arb_weighted_rr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_arb_multi_rr_test_suite",
+    params = {
+        "NumRequesters": [
+            "3",
+            "5",
+        ],
+        "MaxGrantPerCycle": [
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_arb_multi_rr"],
+)

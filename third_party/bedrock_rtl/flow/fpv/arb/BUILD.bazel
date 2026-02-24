@@ -1,0 +1,168 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_fpv_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+# Basic arb FV checker
+verilog_library(
+    name = "br_flow_arb_basic_fpv_monitor",
+    srcs = ["br_flow_arb_basic_fpv_monitor.sv"],
+)
+
+# Bedrock-RTL Flow-Controlled Arbiter (Fixed-Priority)
+
+verilog_library(
+    name = "br_flow_arb_fixed_fpv_monitor",
+    srcs = ["br_flow_arb_fixed_fpv_monitor.sv"],
+    deps = [
+        ":br_flow_arb_basic_fpv_monitor",
+        "//flow/rtl:br_flow_arb_fixed",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_flow_arb_fixed_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_flow_arb_fixed_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_flow_arb_fixed_test_suite",
+    illegal_param_combinations = {
+        (
+            "EnableAssertPushValidStability",
+            "EnableCoverPushBackpressure",
+        ): [
+            ("1", "0"),
+        ],
+    },
+    params = {
+        "EnableAssertPushValidStability": [
+            "0",
+            "1",
+        ],
+        "EnableCoverPushBackpressure": [
+            "0",
+            "1",
+        ],
+        "NumFlows": [
+            "1",
+            "2",
+            "4",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "",
+    },
+    top = "br_flow_arb_fixed",
+    deps = [":br_flow_arb_fixed_fpv_monitor"],
+)
+
+# Bedrock-RTL Flow-Controlled Arbiter (Least-Recently-Used)
+
+verilog_library(
+    name = "br_flow_arb_lru_fpv_monitor",
+    srcs = ["br_flow_arb_lru_fpv_monitor.sv"],
+    deps = [
+        ":br_flow_arb_basic_fpv_monitor",
+        "//arb/fpv:lru_basic_fpv_monitor",
+        "//flow/rtl:br_flow_arb_lru",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_flow_arb_lru_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_flow_arb_lru_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_flow_arb_lru_test_suite",
+    illegal_param_combinations = {
+        (
+            "EnableAssertPushValidStability",
+            "EnableCoverPushBackpressure",
+        ): [
+            ("1", "0"),
+        ],
+    },
+    params = {
+        "EnableAssertPushValidStability": [
+            "0",
+            "1",
+        ],
+        "EnableCoverPushBackpressure": [
+            "0",
+            "1",
+        ],
+        "NumFlows": [
+            "1",
+            "2",
+            "4",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "",
+    },
+    top = "br_flow_arb_lru",
+    deps = [":br_flow_arb_lru_fpv_monitor"],
+)
+
+# Bedrock-RTL Flow-Controlled Arbiter (Round-Robin)
+
+verilog_library(
+    name = "br_flow_arb_rr_fpv_monitor",
+    srcs = ["br_flow_arb_rr_fpv_monitor.sv"],
+    deps = [
+        ":br_flow_arb_basic_fpv_monitor",
+        "//arb/fpv:rr_basic_fpv_monitor",
+        "//flow/rtl:br_flow_arb_rr",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_flow_arb_rr_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_flow_arb_rr_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_flow_arb_rr_test_suite",
+    illegal_param_combinations = {
+        (
+            "EnableAssertPushValidStability",
+            "EnableCoverPushBackpressure",
+        ): [
+            ("1", "0"),
+        ],
+    },
+    params = {
+        "EnableAssertPushValidStability": [
+            "0",
+            "1",
+        ],
+        "EnableCoverPushBackpressure": [
+            "0",
+            "1",
+        ],
+        "NumFlows": [
+            "1",
+            "2",
+            "4",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "",
+    },
+    top = "br_flow_arb_rr",
+    deps = [":br_flow_arb_rr_fpv_monitor"],
+)

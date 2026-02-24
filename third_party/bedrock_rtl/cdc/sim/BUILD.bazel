@@ -1,0 +1,255 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_sim_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+verilog_library(
+    name = "br_cdc_fifo_flops_tb",
+    srcs = ["br_cdc_fifo_flops_tb.sv"],
+    deps = [
+        "//cdc/rtl:br_cdc_fifo_flops",
+        "//fifo/sim:br_fifo_test_harness",
+        "//misc/sim:br_test_driver",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_cdc_fifo_flops_tb_elab_test",
+    tool = "verific",
+    top = "br_cdc_fifo_flops_tb",
+    deps = [
+        ":br_cdc_fifo_flops_tb",
+        "//gate/rtl:br_gate_mock",
+        "//mux/rtl:br_mux_bin_structured_gates_mock",
+    ],
+)
+
+[
+    br_verilog_sim_test_tools_suite(
+        name = "br_cdc_fifo_flops_sim_test_tools_suite" + cdc_delay_mode,
+        opts = [
+            "+cdc_delay_mode=" + cdc_delay_mode,
+            "+define+SIMULATION",
+        ],
+        params = {
+            "Depth": [
+                # Minimum depth needed for full bandwidth at the maximum cut-through and backpressure latencies
+                "15",
+            ],
+            "Width": ["8"],
+            "RegisterPopOutputs": [
+                "0",
+                "1",
+            ],
+            "FlopRamAddressDepthStages": [
+                "0",
+                "1",
+            ],
+            "EnableStructuredGatesDataQualification": [
+                "0",
+                "1",
+            ],
+            "NumSyncStages": [
+                "2",
+                "3",
+            ],
+        },
+        tags = ["no-sandbox"],
+        tools = ["vcs"],
+        top = "br_cdc_fifo_flops_tb",
+        deps = [
+            ":br_cdc_fifo_flops_tb",
+            "//gate/rtl:br_gate_mock",
+            "//mux/rtl:br_mux_bin_structured_gates_mock",
+        ],
+    )
+    for cdc_delay_mode in [
+        "0",
+        "1",
+        "2",
+        "3",
+    ]
+]
+
+verilog_library(
+    name = "br_cdc_fifo_flops_push_credit_tb",
+    srcs = ["br_cdc_fifo_flops_push_credit_tb.sv"],
+    deps = [
+        "//cdc/rtl:br_cdc_fifo_flops_push_credit",
+        "//credit/rtl:br_credit_sender",
+        "//fifo/sim:br_fifo_test_harness",
+        "//misc/sim:br_test_driver",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_cdc_fifo_flops_push_credit_tb_elab_test",
+    tool = "verific",
+    top = "br_cdc_fifo_flops_push_credit_tb",
+    deps = [
+        ":br_cdc_fifo_flops_push_credit_tb",
+        "//gate/rtl:br_gate_mock",
+        "//mux/rtl:br_mux_bin_structured_gates_mock",
+    ],
+)
+
+[
+    br_verilog_sim_test_tools_suite(
+        name = "br_cdc_fifo_flops_push_credit_sim_test_tools_suite" + cdc_delay_mode,
+        opts = [
+            "+cdc_delay_mode=" + cdc_delay_mode,
+            "+define+SIMULATION",
+        ],
+        params = {
+            "RegisterPopOutputs": [
+                "0",
+                "1",
+            ],
+            "FlopRamAddressDepthStages": [
+                "0",
+                "1",
+            ],
+            "EnableStructuredGatesDataQualification": [
+                "0",
+                "1",
+            ],
+            "NumSyncStages": [
+                "2",
+                "3",
+            ],
+            "RegisterPushOutputs": [
+                "0",
+                "1",
+            ],
+        },
+        tools = ["vcs"],
+        top = "br_cdc_fifo_flops_push_credit_tb",
+        deps = [
+            ":br_cdc_fifo_flops_push_credit_tb",
+            "//gate/rtl:br_gate_mock",
+            "//mux/rtl:br_mux_bin_structured_gates_mock",
+        ],
+    )
+    for cdc_delay_mode in [
+        "0",
+        "1",
+        "2",
+        "3",
+    ]
+]
+
+verilog_library(
+    name = "br_cdc_bit_pulse_tb",
+    srcs = ["br_cdc_bit_pulse_tb.sv"],
+    deps = [
+        "//cdc/rtl:br_cdc_bit_pulse",
+        "//gate/rtl:br_gate_mock",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_cdc_bit_pulse_tb_elab_test",
+    tool = "verific",
+    top = "br_cdc_bit_pulse_tb",
+    deps = [
+        ":br_cdc_bit_pulse_tb",
+    ],
+)
+
+[
+    br_verilog_sim_test_tools_suite(
+        name = "br_cdc_bit_pulse_sim_test_tools_suite_" + cdc_delay_mode,
+        opts = [
+            "+cdc_delay_mode=" + cdc_delay_mode,
+            "+define+SIMULATION",
+        ],
+        params = {
+            "NumStages": [
+                "2",
+                "3",
+            ],
+            "RegisterOutput": [
+                "0",
+                "1",
+            ],
+            "SrcClkPeriod": [
+                "5",
+                "20",
+            ],
+            "DstClkPeriod": [
+                "10",
+                "30",
+            ],
+        },
+        tags = ["no-sandbox"],
+        tools = [
+            "vcs",
+        ],
+        deps = [":br_cdc_bit_pulse_tb"],
+    )
+    for cdc_delay_mode in [
+        "0",
+        "1",
+        "2",
+        "3",
+    ]
+]
+
+verilog_library(
+    name = "br_cdc_reg_tb",
+    srcs = ["br_cdc_reg_tb.sv"],
+    deps = [
+        "//cdc/rtl:br_cdc_reg",
+        "//misc/sim:br_test_driver",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_cdc_reg_tb_elab_test",
+    tool = "verific",
+    top = "br_cdc_reg_tb",
+    deps = [
+        ":br_cdc_reg_tb",
+        "//gate/rtl:br_gate_mock",
+    ],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_cdc_reg_sim_test_tools_suite",
+    params = {
+        "Width": ["8"],
+        "RegisterPopOutputs": [
+            "0",
+            "1",
+        ],
+        "RegisterResetActive": [
+            "0",
+            "1",
+        ],
+        "PushClockPeriodNs": [
+            "10",
+            "16",
+            "20",
+        ],
+        "PopClockPeriodNs": [
+            "10",
+            "16",
+            "20",
+        ],
+    },
+    tools = [
+        "vcs",
+    ],
+    top = "br_cdc_reg_tb",
+    deps = [
+        ":br_cdc_reg_tb",
+        "//gate/rtl:br_gate_mock",
+    ],
+)

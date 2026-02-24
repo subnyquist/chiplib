@@ -1,0 +1,18 @@
+--- a/verilog/providers.bzl
++++ b/verilog/providers.bzl
+@@ -124,11 +124,13 @@ verilog_library = rule(
+         ),
+         "hdrs": attr.label_list(
+             doc = "Verilog or SystemVerilog headers.",
+-            allow_files = [".vh", ".svh"],
++            # Normally we'd constrain the set of suffices, but some IP vendors use really weird conventions.
++            allow_files = True,
+         ),
+         "srcs": attr.label_list(
+             doc = "Verilog or SystemVerilog sources.",
+-            allow_files = [".v", ".sv"],
++            # Normally we'd constrain the set of suffices, but some IP vendors use really weird conventions.
++            allow_files = True,
+         ),
+     },
+ )

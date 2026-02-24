@@ -1,0 +1,10 @@
+bazel-*
+MODULE.bazel.lock
+user.bazelrc
+ci.bazelrc
+.vscode
+chipstack_artifacts
+*.f
+__pycache__
+target
+.spr.yml

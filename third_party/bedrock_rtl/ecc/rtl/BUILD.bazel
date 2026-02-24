@@ -1,0 +1,144 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+#########################################
+# SED Encoder
+#########################################
+verilog_library(
+    name = "br_ecc_sed_encoder",
+    srcs = ["br_ecc_sed_encoder.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ecc_sed_encoder_test_suite",
+    params = {"DataWidth": [
+        "1",
+        "32",
+    ]},
+    deps = [":br_ecc_sed_encoder"],
+)
+
+#########################################
+# SED Decoder
+#########################################
+verilog_library(
+    name = "br_ecc_sed_decoder",
+    srcs = ["br_ecc_sed_decoder.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ecc_sed_decoder_test_suite",
+    params = {"DataWidth": [
+        "1",
+        "32",
+    ]},
+    deps = [":br_ecc_sed_decoder"],
+)
+
+#########################################
+# SECDED Encoder
+#########################################
+verilog_library(
+    name = "br_ecc_secded_encoder",
+    srcs = ["br_ecc_secded_encoder.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+        "//macros:br_assign",
+        "//macros:br_unused",
+        "//pkg:br_ecc_secded_pkg",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+K = [
+    # Generated configs
+    "4",
+    "8",
+    "11",
+    "16",
+    "26",
+    "32",
+    "57",
+    "64",
+    "120",
+    "128",
+    "247",
+    "256",
+    "502",
+    "512",
+    "1013",
+    "1024",
+    # Padded configs
+    "9",
+    "68",
+]
+
+[
+    br_verilog_elab_and_lint_test_suite(
+        name = "br_ecc_secded_encoder_test_suite_" + k,
+        params = {
+            "DataWidth": [k],
+            "RegisterInputs": [
+                "0",
+                "1",
+            ],
+            "RegisterOutputs": [
+                "0",
+                "1",
+            ],
+        },
+        deps = [":br_ecc_secded_encoder"],
+    )
+    for k in K
+]
+
+verilog_library(
+    name = "br_ecc_secded_decoder",
+    srcs = ["br_ecc_secded_decoder.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+        "//macros:br_assign",
+        "//macros:br_unused",
+        "//pkg:br_ecc_secded_pkg",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+[
+    br_verilog_elab_and_lint_test_suite(
+        name = "br_ecc_secded_decoder_test_suite_" + k,
+        params = {
+            "DataWidth": [k],
+            "RegisterInputs": [
+                "0",
+                "1",
+            ],
+            "RegisterSyndrome": [
+                "0",
+                "1",
+            ],
+            "RegisterOutputs": [
+                "0",
+                "1",
+            ],
+        },
+        deps = [":br_ecc_secded_decoder"],
+    )
+    for k in K
+]

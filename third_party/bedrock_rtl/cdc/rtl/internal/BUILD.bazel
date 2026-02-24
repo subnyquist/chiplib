@@ -1,0 +1,245 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//cdc/rtl:__subpackages__"])
+
+verilog_library(
+    name = "br_cdc_fifo_push_flag_mgr",
+    srcs = ["br_cdc_fifo_push_flag_mgr.sv"],
+    deps = [
+        ":br_cdc_fifo_reset_overlap_checks",
+        "//counter/rtl:br_counter_incr",
+        "//delay/rtl:br_delay_nr",
+        "//enc/rtl:br_enc_bin2gray",
+        "//enc/rtl:br_enc_gray2bin",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_cdc_fifo_push_ctrl",
+    srcs = ["br_cdc_fifo_push_ctrl.sv"],
+    deps = [
+        ":br_cdc_fifo_push_flag_mgr",
+        "//fifo/rtl/internal:br_fifo_push_ctrl_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_fifo_push_ctrl_test_suite",
+    params = {
+        "Depth": [
+            "5",
+            "8",
+        ],
+        "Width": [
+            "8",
+        ],
+        "RamWriteLatency": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_cdc_fifo_push_ctrl"],
+)
+
+verilog_library(
+    name = "br_cdc_fifo_push_ctrl_credit",
+    srcs = ["br_cdc_fifo_push_ctrl_credit.sv"],
+    deps = [
+        ":br_cdc_fifo_push_flag_mgr",
+        "//credit/rtl:br_credit_receiver",
+        "//fifo/rtl/internal:br_fifo_push_ctrl_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_fifo_push_ctrl_credit_test_suite",
+    params = {
+        "Depth": [
+            "5",
+            "8",
+        ],
+        "Width": [
+            "8",
+        ],
+        "RamWriteLatency": [
+            "1",
+            "2",
+        ],
+        "RegisterPushOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    top = "br_cdc_fifo_push_ctrl_credit",
+    deps = [
+        ":br_cdc_fifo_push_ctrl_credit",
+        "//gate/rtl:br_gate_mock",
+    ],
+)
+
+verilog_library(
+    name = "br_cdc_fifo_pop_flag_mgr",
+    srcs = ["br_cdc_fifo_pop_flag_mgr.sv"],
+    deps = [
+        ":br_cdc_fifo_reset_overlap_checks",
+        "//counter/rtl:br_counter_incr",
+        "//delay/rtl:br_delay_nr",
+        "//enc/rtl:br_enc_bin2gray",
+        "//enc/rtl:br_enc_gray2bin",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_cdc_fifo_pop_ctrl",
+    srcs = ["br_cdc_fifo_pop_ctrl.sv"],
+    deps = [
+        ":br_cdc_fifo_pop_flag_mgr",
+        "//fifo/rtl/internal:br_fifo_pop_ctrl_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_gates",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_fifo_pop_ctrl_test_suite",
+    params = {
+        "Depth": [
+            "5",
+            "8",
+        ],
+        "Width": [
+            "8",
+        ],
+        "RamReadLatency": [
+            "0",
+            "1",
+            "2",
+        ],
+        "RegisterPopOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_cdc_fifo_pop_ctrl"],
+)
+
+verilog_library(
+    name = "br_cdc_fifo_gray_count_sync",
+    srcs = ["br_cdc_fifo_gray_count_sync.sv"],
+    deps = [
+        "//cdc/rtl:br_cdc_bit_toggle",
+        "//macros:br_asserts_internal",
+        "//macros:br_gates",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_fifo_gray_count_sync_test_suite",
+    params = {
+        "CountWidth": [
+            "3",
+            "4",
+        ],
+        "NumStages": [
+            "2",
+            "3",
+        ],
+    },
+    top = "br_cdc_fifo_gray_count_sync",
+    deps = [
+        ":br_cdc_fifo_gray_count_sync",
+        "//gate/rtl:br_gate_mock",
+    ],
+)
+
+verilog_library(
+    name = "br_cdc_fifo_reset_overlap_checks",
+    srcs = ["br_cdc_fifo_reset_overlap_checks.sv"],
+    deps = [
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_unused",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_fifo_reset_overlap_checks_test_suite",
+    disable_lint_rules = ["NO_OUTPUT"],
+    params = {
+        "MinOverlapCycles": [
+            "1",
+            "10",
+        ],
+    },
+    top = "br_cdc_fifo_reset_overlap_checks",
+    deps = [":br_cdc_fifo_reset_overlap_checks"],
+)
+
+verilog_library(
+    name = "br_cdc_reg_push",
+    srcs = ["br_cdc_reg_push.sv"],
+    deps = [
+        "//delay/rtl:br_delay_nr",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_reg_push_test_suite",
+    params = {
+        "Width": [
+            "8",
+        ],
+        "RegisterResetActive": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_cdc_reg_push"],
+)
+
+verilog_library(
+    name = "br_cdc_reg_pop",
+    srcs = ["br_cdc_reg_pop.sv"],
+    deps = [
+        "//delay/rtl:br_delay_nr",
+        "//flow/rtl:br_flow_reg_fwd",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_cdc_reg_pop_test_suite",
+    params = {
+        "Width": [
+            "8",
+        ],
+        "RegisterPopOutputs": [
+            "0",
+            "1",
+        ],
+        "RegisterResetActive": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_cdc_reg_pop"],
+)

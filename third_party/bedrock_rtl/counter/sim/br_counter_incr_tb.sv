@@ -1,0 +1,164 @@
+// SPDX-License-Identifier: Apache-2.0
+
+
+// A crappy testbench generated with o1-preview
+
+`timescale 1ns / 1ps
+
+module br_counter_incr_tb;
+
+  // Parameters matching the module under test
+  parameter int MaxValue = 15;  // Example maximum value
+  parameter int MaxIncrement = 3;  // Example maximum increment
+  parameter bit EnableSaturate = 0;
+  parameter bit EnableReinitAndIncr = 0;
+  localparam int ValueWidth = $clog2(MaxValue + 1);
+  localparam int IncrementWidth = $clog2(MaxIncrement + 1);
+
+  // Testbench signals
+  logic                      clk;
+  logic                      rst;
+  logic                      reinit;
+  logic [    ValueWidth-1:0] initial_value;
+  logic                      incr_valid;
+  logic [IncrementWidth-1:0] incr;
+  logic [    ValueWidth-1:0] value;
+  logic [    ValueWidth-1:0] value_next;
+
+  // Instantiate the module under test (MUT)
+  br_counter_incr #(
+      .MaxValue(MaxValue),
+      .MaxIncrement(MaxIncrement),
+      .EnableSaturate(EnableSaturate),
+      .EnableReinitAndIncr(EnableReinitAndIncr)
+  ) dut (
+      .clk(clk),
+      .rst(rst),
+      .reinit(reinit),
+      .initial_value(initial_value),
+      .incr_valid(incr_valid),
+      .incr(incr),
+      .value(value),
+      .value_next(value_next)
+  );
+
+  // Clock generation
+  initial clk = 0;
+  always #5 clk = ~clk;  // 100MHz clock
+
+  // Test sequence
+  integer error_count;
+  integer expected_value;
+
+  initial begin
+    error_count   = 0;
+
+    // Initialize signals
+    rst           = 1;
+    reinit        = 0;
+    initial_value = 0;
+    incr_valid    = 0;
+    incr          = 0;
+
+    // Apply reset
+    @(negedge clk);
+    rst = 1;
+    @(negedge clk);
+    rst = 0;
+
+    // Wait for reset to propagate
+    @(negedge clk);
+
+    // Test incrementing by 1 for MaxValue cycles.
+    @(negedge clk);
+    incr_valid = 1;
+    incr       = 1;
+    repeat (MaxValue) @(negedge clk);
+    incr_valid = 0;
+    incr       = 0;
+
+    // Check the value
+    @(negedge clk);
+    if (value !== MaxValue) begin
+      error_count++;
+      $error("Test failed: Expected value = %0d, Got value = %0d", MaxValue, value);
+    end
+
+    // Apply reset
+    @(negedge clk);
+    rst = 1;
+    @(negedge clk);
+    rst        = 0;
+
+    // Test incrementing by MaxIncrement
+    incr_valid = 1;
+    incr       = MaxIncrement;
+    @(negedge clk);
+    incr_valid = 0;
+    incr       = 0;
+
+    // Check the value
+    @(negedge clk);
+    if (value !== MaxIncrement) begin
+      error_count++;
+      $error("Test failed: Expected value = %0d Got value = %0d", MaxIncrement, value);
+    end
+
+    // Test reinitialization without increment
+    @(negedge clk);
+    reinit        = 1;
+    initial_value = MaxValue;
+    @(negedge clk);
+    reinit = 0;
+
+    if (value !== MaxValue) begin
+      error_count++;
+      $error("Test failed: Expected reinitialized value = %0d, Got value = %0d", MaxValue, value);
+    end
+
+    // Test wrapping around / saturating at MaxValue
+    @(negedge clk);
+    incr_valid = 1;
+    incr       = 1;
+
+    @(negedge clk);
+    incr_valid     = 0;
+    incr           = 0;
+
+    expected_value = EnableSaturate ? MaxValue : 0;
+
+    if (value !== expected_value) begin
+      error_count++;
+      $error("Test failed: Expected wrap-around value = %0d, Got value = %0d", expected_value,
+             value);
+    end
+
+    // Test reinit with increment on the same cycle
+    @(negedge clk);
+    reinit        = 1;
+    initial_value = 2;
+    incr_valid    = 1;
+    incr          = 1;
+    @(negedge clk);
+    reinit         = 0;
+    incr_valid     = 0;
+    incr           = 0;
+
+    expected_value = EnableReinitAndIncr ? 3 : 2;
+
+    @(negedge clk);
+    if (value !== expected_value) begin
+      error_count++;
+      $error("Test failed: Expected value = %0d, Got value = %0d", expected_value, value);
+    end
+
+    // Finish simulation
+    if (error_count == 0) begin
+      $display("TEST PASSED");
+    end else begin
+      $display("Simulation failed with %0d errors.", error_count);
+    end
+    $finish;
+  end
+
+endmodule

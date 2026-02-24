@@ -1,0 +1,716 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_ram_flops",
+    srcs = ["br_ram_flops.sv"],
+    deps = [
+        ":br_ram_addr_decoder",
+        ":br_ram_data_rd_pipe",
+        ":br_ram_flops_tile",
+        "//macros:br_asserts_internal",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_ram_flops_1r1w_mock",
+    srcs = ["br_ram_flops_1r1w_mock.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_ram_flops_tile",
+    srcs = ["br_ram_flops_tile.sv"],
+    deps = [
+        "//enc/rtl:br_enc_bin2onehot",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_unused",
+        "//mux/rtl:br_mux_onehot",
+        "//pkg:br_math_pkg",
+        # Omitting //mux/rtl:br_mux_bin_structured_gates and //mux/rtl:br_mux_bin_structured_gates_mock so
+        # that downstream targets (which may exist in another repo) can decide whether to use these behavioral
+        # models or swap them out for some other vendor models. Downstream targets should decide whether to add
+        # the //mux/rtl:br_mux_bin_structured_gates or //mux/rtl:br_mux_bin_structured_gates mock dependencies
+        # themselves.
+    ],
+)
+
+verilog_library(
+    name = "br_ram_addr_decoder",
+    srcs = ["br_ram_addr_decoder.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//demux/rtl:br_demux_bin",
+        "//macros:br_asserts_internal",
+        "//macros:br_tieoff",
+        "//macros:br_unused",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_ram_data_rd_pipe",
+    srcs = ["br_ram_data_rd_pipe.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_asserts_internal",
+        "//macros:br_tieoff",
+        "//macros:br_unused",
+        "//mux/rtl:br_mux_onehot",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_ram_initializer",
+    srcs = ["br_ram_initializer.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_tile_test_suite_full_write",
+    params = {
+        "Depth": [
+            "2",
+            "7",
+        ],
+        "Width": [
+            "1",
+            "16",
+        ],
+        "EnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnableReset": [
+            "0",
+            "1",
+        ],
+        "EnablePartialWrite": ["0"],
+    },
+    deps = [":br_ram_flops_tile"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_tile_test_suite_partial_write",
+    params = {
+        "EnablePartialWrite": ["1"],
+        "Depth": ["4"],
+        "Width": ["12"],
+        "WordWidth": [
+            "3",
+            "4",
+            "12",
+        ],
+        "EnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnableReset": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_ram_flops_tile"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_tile_test_suite_structured_gates",
+    params = {
+        "Depth": ["12"],
+        "Width": ["8"],
+        "EnableBypass": ["0"],
+        "UseStructuredGates": ["1"],
+        "NumReadPorts": [
+            "1",
+            "2",
+        ],
+    },
+    top = "br_ram_flops_tile",
+    deps = [
+        ":br_ram_flops_tile",
+        "//gate/rtl:br_gate_mock",
+        "//mux/rtl:br_mux_bin_structured_gates_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_tile_test_suite_single_entry",
+    params = {
+        "EnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "EnableReset": [
+            "0",
+            "1",
+        ],
+        "Depth": ["1"],
+        "Width": ["8"],
+        "WordWidth": ["2"],
+        "NumReadPorts": [
+            "1",
+            "2",
+        ],
+        "NumWritePorts": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_ram_flops_tile"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_tile_test_suite_multi_entry_multi_read",
+    params = {
+        "Depth": ["4"],
+        "Width": ["8"],
+        "EnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "NumReadPorts": ["2"],
+    },
+    deps = [":br_ram_flops_tile"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_tile_test_suite_multi_entry_multi_write",
+    params = {
+        "Depth": ["4"],
+        "Width": ["8"],
+        "EnableReset": [
+            "0",
+            "1",
+        ],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "NumWritePorts": ["2"],
+    },
+    deps = [":br_ram_flops_tile"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_addr_decoder_test_suite_one_tile",
+    params = {
+        "Depth": [
+            "2",
+            "7",
+            "8",
+        ],
+        "DataWidth": [
+            "1",
+            "13",
+            "16",
+        ],
+        "Tiles": [
+            "1",
+        ],
+        "Stages": [
+            "0",
+            "1",
+        ],
+        "EnableDatapath": ["1"],
+    },
+    deps = [":br_ram_addr_decoder"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_addr_decoder_test_suite_multi_tile0",
+    params = {
+        "Depth": [
+            "32",
+        ],
+        "DataWidth": [
+            "8",
+        ],
+        "Tiles": [
+            "2",
+            "4",
+            "8",
+            "32",
+        ],
+        "Stages": [
+            "0",
+            "3",
+        ],
+        "EnableDatapath": ["1"],
+    },
+    deps = [":br_ram_addr_decoder"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_addr_decoder_test_suite_multi_tile1",
+    params = {
+        "Depth": [
+            "30",
+        ],
+        "DataWidth": [
+            "8",
+        ],
+        "Tiles": [
+            "1",
+            "3",
+            "5",
+            "6",
+            "30",
+        ],
+        "Stages": [
+            "0",
+        ],
+        "EnableDatapath": ["0"],
+    },
+    deps = [":br_ram_addr_decoder"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_data_rd_pipe_test_suite_stages",
+    params = {
+        "Width": [
+            "1",
+        ],
+        "DepthTiles": [
+            "1",
+        ],
+        "WidthTiles": [
+            "1",
+        ],
+        "DepthStages": [
+            "0",
+            "1",
+            "2",
+        ],
+        "WidthStages": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_ram_data_rd_pipe"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_data_rd_pipe_test_suite_tiles",
+    params = {
+        "Width": [
+            "128",
+        ],
+        "DepthTiles": [
+            "1",
+            "2",
+        ],
+        "WidthTiles": [
+            "4",
+            "16",
+        ],
+        "DepthStages": [
+            "1",
+        ],
+        "WidthStages": [
+            "1",
+        ],
+    },
+    deps = [":br_ram_data_rd_pipe"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_data_rd_pipe_test_suite_odd_width",
+    params = {
+        "Width": [
+            "33",
+        ],
+        "DepthTiles": [
+            "3",
+        ],
+        "WidthTiles": [
+            "1",
+            "3",
+        ],
+        "DepthStages": [
+            "1",
+        ],
+        "WidthStages": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_ram_data_rd_pipe"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_sweep_depth_width",
+    params = {
+        "Depth": [
+            "123",
+            "128",
+        ],
+        "Width": [
+            "1",
+            "7",
+            "32",
+        ],
+        "DepthTiles": ["1"],
+        "WidthTiles": ["1"],
+        "AddressDepthStages": ["0"],
+        "ReadDataDepthStages": ["0"],
+        "ReadDataWidthStages": ["0"],
+        "TileEnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnableMemReset": ["0"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_sweep_tiles_stages",
+    params = {
+        "Depth": [
+            "30",
+        ],
+        "Width": [
+            "64",
+        ],
+        "DepthTiles": [
+            "2",
+            "3",
+        ],
+        "WidthTiles": [
+            "1",
+            "2",
+        ],
+        "AddressDepthStages": [
+            "0",
+            "1",
+        ],
+        "ReadDataDepthStages": [
+            "0",
+            "1",
+        ],
+        "ReadDataWidthStages": [
+            "0",
+            "1",
+        ],
+        "TileEnableBypass": ["0"],
+        "EnableMemReset": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_sweep_word_width_single_tile",
+    params = {
+        "Depth": ["4"],
+        "Width": ["64"],
+        "EnablePartialWrite": ["1"],
+        "WordWidth": [
+            "8",
+            "16",
+            "32",
+        ],
+        "WidthTiles": ["1"],
+        "EnableMemReset": ["0"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_sweep_tile_width_partial_write",
+    params = {
+        "Depth": ["4"],
+        "Width": ["64"],
+        "EnablePartialWrite": ["1"],
+        "WordWidth": ["8"],
+        "WidthTiles": [
+            "2",
+            "4",
+            "8",
+        ],
+    },
+    top = "br_ram_flops",
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_en_mem_reset_partial_write",
+    params = {
+        "EnableMemReset": ["1"],
+        "Depth": ["4"],
+        "Width": ["64"],
+        "EnablePartialWrite": ["1"],
+        "WordWidth": ["8"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_multi_read_ports",
+    params = {
+        "NumReadPorts": ["2"],
+        "Depth": ["64"],
+        "Width": ["64"],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "TileEnableBypass": [
+            "0",
+            "1",
+        ],
+        "DepthTiles": [
+            "1",
+            "2",
+        ],
+        "WidthTiles": [
+            "1",
+            "2",
+        ],
+        "WordWidth": ["8"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_multi_write_ports",
+    params = {
+        "NumWritePorts": ["2"],
+        "Depth": ["64"],
+        "Width": ["64"],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "EnableMemReset": [
+            "0",
+            "1",
+        ],
+        "DepthTiles": [
+            "1",
+            "2",
+        ],
+        "WidthTiles": [
+            "1",
+            "2",
+        ],
+        "WordWidth": ["8"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_structured_gates",
+    params = {
+        "Depth": ["12"],
+        "Width": ["8"],
+        "TileEnableBypass": ["0"],
+        "UseStructuredGates": ["1"],
+        "NumReadPorts": [
+            "1",
+            "2",
+        ],
+    },
+    top = "br_ram_flops",
+    deps = [
+        ":br_ram_flops",
+        "//gate/rtl:br_gate_mock",
+        "//mux/rtl:br_mux_bin_structured_gates_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_single_tile_single_entry",
+    params = {
+        "NumReadPorts": [
+            "1",
+            "2",
+        ],
+        "NumWritePorts": [
+            "1",
+            "2",
+        ],
+        "TileEnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "EnableMemReset": [
+            "0",
+            "1",
+        ],
+        "Depth": ["1"],
+        "Width": ["8"],
+        "WordWidth": ["2"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_test_suite_multi_tile_single_entry",
+    params = {
+        "NumReadPorts": [
+            "1",
+            "2",
+        ],
+        "NumWritePorts": [
+            "1",
+            "2",
+        ],
+        "TileEnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnablePartialWrite": [
+            "0",
+            "1",
+        ],
+        "EnableMemReset": [
+            "0",
+            "1",
+        ],
+        "Depth": ["2"],
+        "DepthTiles": ["2"],
+        "WidthTiles": ["2"],
+        "Width": ["8"],
+        "WordWidth": ["2"],
+    },
+    deps = [":br_ram_flops"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_1r1w_mock_test_suite_sweep_depth_width",
+    params = {
+        "Depth": [
+            "123",
+            "128",
+        ],
+        "Width": [
+            "1",
+            "7",
+            "32",
+        ],
+        "DepthTiles": ["1"],
+        "WidthTiles": ["1"],
+        "AddressDepthStages": ["0"],
+        "ReadDataDepthStages": ["0"],
+        "ReadDataWidthStages": ["0"],
+        "TileEnableBypass": [
+            "0",
+            "1",
+        ],
+        "EnableMemReset": ["0"],
+    },
+    deps = [":br_ram_flops_1r1w_mock"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_1r1w_mock_test_suite_sweep_tiles_stages",
+    params = {
+        "Depth": [
+            "30",
+        ],
+        "Width": [
+            "64",
+        ],
+        "DepthTiles": [
+            "2",
+            "3",
+        ],
+        "WidthTiles": [
+            "1",
+            "2",
+        ],
+        "AddressDepthStages": [
+            "0",
+            "1",
+        ],
+        "ReadDataDepthStages": [
+            "0",
+            "1",
+        ],
+        "ReadDataWidthStages": [
+            "0",
+            "1",
+        ],
+        "TileEnableBypass": ["0"],
+        "EnableMemReset": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_ram_flops_1r1w_mock"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_1r1w_mock_test_suite_sweep_word_width_single_tile",
+    params = {
+        "Depth": ["4"],
+        "Width": ["64"],
+        "EnablePartialWrite": ["1"],
+        "WordWidth": [
+            "8",
+            "16",
+            "32",
+        ],
+        "WidthTiles": ["1"],
+        "EnableMemReset": ["0"],
+    },
+    deps = [":br_ram_flops_1r1w_mock"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_flops_1r1w_mock_test_suite_en_mem_reset_partial_write",
+    params = {
+        "EnableMemReset": ["1"],
+        "Depth": ["4"],
+        "Width": ["64"],
+        "EnablePartialWrite": ["1"],
+        "WordWidth": ["8"],
+    },
+    deps = [":br_ram_flops_1r1w_mock"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_ram_initializer_test_suite",
+    params = {
+        "Depth": [
+            "2",
+            "5",
+        ],
+        "Width": [
+            "1",
+            "3",
+        ],
+    },
+    deps = [":br_ram_initializer"],
+)

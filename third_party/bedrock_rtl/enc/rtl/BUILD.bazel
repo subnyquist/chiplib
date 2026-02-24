@@ -1,0 +1,161 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_enc_bin2onehot",
+    srcs = ["br_enc_bin2onehot.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_enc_onehot2bin",
+    srcs = ["br_enc_onehot2bin.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_enc_priority_encoder",
+    srcs = ["br_enc_priority_encoder.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_unused",
+    ],
+)
+
+verilog_library(
+    name = "br_enc_bin2gray",
+    srcs = ["br_enc_bin2gray.sv"],
+    deps = ["//macros:br_asserts_internal"],
+)
+
+verilog_library(
+    name = "br_enc_gray2bin",
+    srcs = ["br_enc_gray2bin.sv"],
+    deps = ["//macros:br_asserts_internal"],
+)
+
+verilog_library(
+    name = "br_enc_countones",
+    srcs = ["br_enc_countones.sv"],
+    deps = ["//macros:br_asserts_internal"],
+)
+
+verilog_library(
+    name = "br_enc_priority_dynamic",
+    srcs = ["br_enc_priority_dynamic.sv"],
+    deps = [
+        ":br_enc_priority_encoder",
+        "//macros:br_asserts_internal",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_bin2onehot_test_suite",
+    params = {
+        "NumValues": [
+            "1",
+            "2",
+            "3",
+        ],
+        "BinWidth": [
+            "2",
+            "5",
+        ],
+    },
+    deps = [":br_enc_bin2onehot"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_onehot2bin_test_suite",
+    params = {
+        "NumValues": [
+            "1",
+            "2",
+            "3",
+        ],
+        "BinWidth": [
+            "2",
+            "5",
+        ],
+    },
+    deps = [":br_enc_onehot2bin"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_priority_encoder_test_suite",
+    params = {
+        "NumRequesters": [
+            "4",
+            "15",
+        ],
+        "NumResults": [
+            "1",
+            "2",
+            "3",
+        ],
+        "MsbHighestPriority": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_enc_priority_encoder"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_gray2bin_test_suite",
+    params = {"Width": [
+        "2",
+        "16",
+        "32",
+    ]},
+    deps = [":br_enc_gray2bin"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_bin2gray_test_suite",
+    params = {"Width": [
+        "2",
+        "16",
+        "32",
+    ]},
+    deps = [":br_enc_bin2gray"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_countones_test_suite",
+    params = {"Width": [
+        "2",
+        "16",
+    ]},
+    deps = [":br_enc_countones"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_enc_priority_dynamic_test_suite",
+    params = {
+        "NumRequesters": [
+            "4",
+            "8",
+        ],
+        "NumResults": [
+            "1",
+            "2",
+            "4",
+        ],
+    },
+    deps = [":br_enc_priority_dynamic"],
+)

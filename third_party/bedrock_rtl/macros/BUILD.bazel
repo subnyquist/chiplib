@@ -1,0 +1,259 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_sim_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test", "verilog_lint_test")
+
+package(default_visibility = ["//visibility:private"])
+
+verilog_library(
+    name = "br_asserts",
+    hdrs = ["br_asserts.svh"],
+    visibility = ["//visibility:public"],
+)
+
+verilog_library(
+    name = "br_asserts_internal",
+    hdrs = ["br_asserts_internal.svh"],
+    visibility = ["//visibility:public"],
+    deps = [":br_asserts"],
+)
+
+verilog_library(
+    name = "br_fv",
+    hdrs = ["br_fv.svh"],
+    visibility = ["//visibility:public"],
+    deps = [":br_asserts"],
+)
+
+verilog_library(
+    name = "br_registers",
+    hdrs = ["br_registers.svh"],
+    visibility = ["//visibility:public"],
+)
+
+verilog_library(
+    name = "br_gates",
+    hdrs = ["br_gates.svh"],
+    visibility = ["//visibility:public"],
+)
+
+verilog_library(
+    name = "br_unused",
+    hdrs = ["br_unused.svh"],
+    visibility = ["//visibility:public"],
+    deps = ["//misc/rtl:br_misc_unused"],
+)
+
+verilog_library(
+    name = "br_unused_tb",
+    srcs = ["br_unused_tb.sv"],
+    deps = [":br_unused"],
+)
+
+verilog_elab_test(
+    name = "br_unused_tb_elab_test",
+    tool = "verific",
+    deps = [":br_unused_tb"],
+)
+
+verilog_lint_test(
+    name = "br_unused_tb_lint_test",
+    tool = "ascentlint",
+    visibility = ["//visibility:public"],
+    deps = [":br_unused_tb"],
+)
+
+verilog_library(
+    name = "br_tieoff",
+    hdrs = ["br_tieoff.svh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//misc/rtl:br_misc_tieoff_one",
+        "//misc/rtl:br_misc_tieoff_zero",
+    ],
+)
+
+verilog_library(
+    name = "br_tieoff_tb",
+    srcs = ["br_tieoff_tb.sv"],
+    deps = [":br_tieoff"],
+)
+
+verilog_elab_test(
+    name = "br_tieoff_tb_elab_test",
+    tool = "verific",
+    deps = [":br_tieoff_tb"],
+)
+
+verilog_lint_test(
+    name = "br_tieoff_tb_lint_test",
+    tool = "ascentlint",
+    deps = [":br_tieoff_tb"],
+)
+
+# Macro unit tests
+verilog_library(
+    name = "br_asserts_test",
+    srcs = ["br_asserts_test.sv"],
+    deps = [":br_asserts"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_elab_test",
+    defines = [
+        "BR_ASSERT_ON",
+        "BR_ENABLE_FPV",
+    ],
+    tool = "verific",
+    deps = [":br_asserts_test"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_elab_noassert_test",
+    tool = "verific",
+    deps = [":br_asserts_test"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_asserts_sim_test_tools_suite",
+    defines = [
+        "BR_ASSERT_ON",
+        "BR_ENABLE_FPV",
+    ],
+    # iverilog support for SVA is not complete
+    tools = ["vcs"],
+    deps = [":br_asserts_test"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_asserts_sim_noassert_test_tools_suite",
+    # iverilog support for SVA is not complete
+    tools = ["vcs"],
+    deps = [":br_asserts_test"],
+)
+
+verilog_library(
+    name = "br_asserts_in_pkg_test",
+    srcs = ["br_asserts_in_pkg_test.sv"],
+    deps = [":br_asserts"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_in_pkg_elab_test",
+    defines = [
+        "BR_ASSERT_ON",
+        "BR_ENABLE_FPV",
+    ],
+    tool = "verific",
+    deps = [":br_asserts_in_pkg_test"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_in_pkg_elab_noassert_test",
+    tool = "verific",
+    deps = [":br_asserts_in_pkg_test"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_asserts_in_pkg_sim_test_tools_suite",
+    defines = [
+        "BR_ASSERT_ON",
+        "BR_ENABLE_FPV",
+    ],
+    elab_only = True,
+    # iverilog support for SVA is not complete
+    tools = ["vcs"],
+    deps = [":br_asserts_in_pkg_test"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_asserts_in_pkg_sim_noassert_test_tools_suite",
+    elab_only = True,
+    # iverilog support for SVA is not complete
+    tools = ["vcs"],
+    deps = [":br_asserts_in_pkg_test"],
+)
+
+# TODO(mgottscho): verilog_test simulation!
+verilog_library(
+    name = "br_asserts_internal_test",
+    srcs = ["br_asserts_internal_test.sv"],
+    deps = [":br_asserts_internal"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_elab_internal_test",
+    defines = [
+        "BR_ASSERT_ON",
+        "BR_ENABLE_FPV",
+        "BR_ENABLE_IMPL_CHECKS",
+    ],
+    tool = "verific",
+    deps = [":br_asserts_internal_test"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_elab_internal_no_impl_test",
+    defines = ["BR_ASSERT_ON"],
+    tool = "verific",
+    deps = [":br_asserts_internal_test"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_elab_internal_no_intg_test",
+    defines = [
+        "BR_ASSERT_ON",
+        "BR_DISABLE_INTG_CHECKS",
+    ],
+    tool = "verific",
+    deps = [":br_asserts_internal_test"],
+)
+
+verilog_elab_test(
+    name = "br_asserts_internal_elab_noassert_test",
+    tool = "verific",
+    deps = [":br_asserts_internal_test"],
+)
+
+verilog_library(
+    name = "br_gates_test",
+    srcs = ["br_gates_test.sv"],
+    deps = [
+        ":br_asserts",
+        ":br_gates",
+        "//gate/rtl:br_gate_mock",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_gates_elab_test",
+    defines = ["BR_ASSERT_ON"],
+    tool = "verific",
+    deps = [":br_gates_test"],
+)
+
+verilog_library(
+    name = "br_assign",
+    hdrs = ["br_assign.svh"],
+    visibility = ["//visibility:public"],
+)
+
+verilog_library(
+    name = "br_assign_test",
+    srcs = ["br_assign_test.sv"],
+    deps = [":br_assign"],
+)
+
+verilog_elab_test(
+    name = "br_assign_elab_test",
+    tool = "verific",
+    deps = [":br_assign_test"],
+)
+
+verilog_lint_test(
+    name = "br_assign_lint_test",
+    tool = "ascentlint",
+    visibility = ["//visibility:public"],
+    deps = [":br_assign_test"],
+)

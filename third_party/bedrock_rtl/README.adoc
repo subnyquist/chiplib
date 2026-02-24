@@ -1,0 +1,1208 @@
+// SPDX-License-Identifier: Apache-2.0
+
+= Bedrock-RTL
+
+image:https://img.shields.io/github/license/xlsynth/bedrock-rtl?color=blue[GitHub License]
+image:https://img.shields.io/badge/language-SystemVerilog-blue[language - SystemVerilog]
+image:https://img.shields.io/badge/build%20system-Bazel-blue[build system - Bazel]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/rtl.json[rtl-files]
+
+image:https://img.shields.io/github/check-runs/xlsynth/bedrock-rtl/main?nameFilter=pre-commit&label=pre-commit[pre-commit,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Apre-commit"]
+image:https://img.shields.io/github/check-runs/xlsynth/bedrock-rtl/main?nameFilter=bazel-build&label=build[bazel-build,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-build"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/python.json[bazel-test-python,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-test-python"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/stardoc.json[bazel-test-stardoc,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-test-stardoc"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/verific.json[bazel-test-verific,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-test-verific"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/ascentlint.json[bazel-test-ascentlint,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-test-ascentlint"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/vcs.json[bazel-test-vcs,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-test-vcs"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/iverilog.json[bazel-test-iverilog,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/ci.yml?query=job%3Abazel-test-iverilog"]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/mgottscho/c66dc2ddc0e513ba06ce338620977b26/raw/jg.json[bazel-test-jg,link="https://github.com/xlsynth/bedrock-rtl/actions/workflows/nightly.yml?query=job%3Abazel-test-jg"]
+image:https://img.shields.io/github/issues/xlsynth/bedrock-rtl/bug?label=bugs[open bugs,link="https://github.com/xlsynth/bedrock-rtl/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug"]
+
+High quality and composable RTL libraries in SystemVerilog
+
+image:bedrock-rtl-logo-light.jpg[Bedrock-RTL,width=300]
+
+== Dependencies
+
+At minimum, you need to have the following tools installed in your environment.
+
+* Bazel == 7.6.1 (recommended to manage this using Bazelisk)
+* System Python interpreter >= 3.12
+
+Additionally, several tools are needed to build and run all of the tests:
+
+* **Open source**
+  ** Linting
+    *** Verible
+  ** Simulation
+    *** Icarus Verilog
+  ** RTL wrapper generation
+    *** TopStitch
+* **Proprietary** (not provided - purchase your own installation and licenses)
+  ** Elaboration
+    *** Verific tclmain
+  ** Linting
+    *** RealIntent AscentLint
+  ** Simulation
+    *** Synopsys VCS
+  ** Formal
+    *** Cadence JasperGold
+    *** Synopsys VCF
+
+NOTE: We no longer support Altair Dsim in CI. Nevertheless, the build system should continue to support it if you wish to use it for your own tests.
+
+The provided Dockerfile can be used to build an image with the minimum dependencies and open source tools.
+The Dockerfile uses RockyLinux 8 on x86-64 as the base image.
+If you want to run tests that leverage proprietary tools, you need to provide your own installations and licenses (which are typically compatible with RockyLinux 8 on x86-64).
+
+To build the Docker image:
+
+[source,shell]
+----
+docker build --platform=linux/amd64 --tag=bedrock-rtl:${USER} .
+docker run -v $(pwd):/src -w /src bedrock-rtl:${USER} /bin/bash
+----
+
+Then once inside the container, try `bazel build //... && bazel test //fifo/sim/... --test_tag_filters=iverilog`.
+
+If you bring your own EDA tools, you may need to provide a bit of your own Python code that implements the plugin API for `verilog_runner.py`.
+If you want to use a tool that isn't already supported, update `//bazel:verilog.bzl`, implement a new verilog runner plugin, and reference your new tool in the appropriate Bazel test targets.
+Not all tests necessarily work with every tool.
+Refer to the `BUILD.bazel` files for specifics.
+
+== Pre-Commit Hooks
+
+We use pre-commit hooks to enforce basic coding style.
+To install the hooks, run:
+
+[source,shell]
+----
+pre-commit install
+----
+
+They should automatically run on every commit.
+You can also run them manually via:
+
+[source,shell]
+----
+pre-commit run
+----
+
+We've tested with pre-commit version 4.0.1.
+
+== Building and Testing
+
+:bazel: https://bazel.build/
+
+We use the powerful {bazel}[Bazel^] build system to assemble filelists and to run all tests (elaboration, lint, simulation, and formal).
+
+A one-step command builds and runs all tests:
+
+[source,shell]
+----
+bazel test //...
+----
+
+[IMPORTANT]
+.Action required for tests to pass!
+====
+By default, the Bazel tests will fail because the repository does not currently provide any EDA tool plugins for the `verilog_runner.py` tool.
+We do this because:
+
+1. We want to keep test definitions as vendor-agnostic as possible.
+2. Certain vendors may have non-disclosure agreements that protect usage of their APIs or licensing agreements that restrict where and how the tools can be run.
+
+You will need to implement the plugin API by subclassing `//python/verilog_runner/eda_tool.py` for the tool(s) of interest and then point to them with the `VERILOG_RUNNER_PLUGIN_PATH` environment variable.
+You should also set this environment variable in the `.bazelrc` file so that it is used in all Bazel test invocations.
+====
+
+The Bazel test rule implementations at `//bazel:verilog.bzl` shell out the `//python/verilog_runner/verilog_runner.py` tool that presents a generic tool-agnostic API that actually implements the test.
+
+== Continuous Integration
+
+We run continuous integration tests with GitHub Actions using all of the supported tools.
+See the `.github/workflows/ci.yml` file for details.
+
+== Style Guide
+
+:xlsynth-verilog-style-guide: https://github.com/xlsynth/verilog-style-guides/blob/master/VerilogCodingStyle.md
+:lowrisc-verilog-style-guide: https://github.com/lowrisc/verilog-style-guides/blob/master/VerilogCodingStyle.md
+
+We follow the {xlsynth-verilog-style-guide}[xlsynth Verilog Style Guide^], which is a fork of the {lowrisc-verilog-style-guide}[lowRISC style guide^] with some minor differences.
+
+== Bazel Rules for Verilog
+
+This repository defines several generally-helpful Bazel Verilog rules that you can use in your own projects.
+
+=== `verilog_library` (external)
+
+:verilog-library: https://github.com/hdl/bazel_rules_hdl/blob/main/verilog/providers.bzl
+
+The `verilog_library` rule is used to collect Verilog source and header files and track their dependencies.
+The original definition of the `verilog_library` rule can be found {verilog-library}[here^].
+We pick up that rule dependency transitively (see the top-level `MODULE.bazel`).
+
+.Using `verilog_library`
+[%collapsible]
+====
+[source,bazel]
+----
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+
+verilog_library(
+    name = "bar",
+    srcs = ["bar.sv"],
+    hdrs = ["baz.svh"]
+)
+
+verilog_library(
+    name = "foo",
+    srcs = ["foo.sv"],
+    deps = [":bar"],
+)
+----
+====
+
+== Other rules
+
+Please see link:bazel/verilog_rules.md[] for documentation on rules defined in this repository.
+
+== Using Bedrock
+
+:bzlmod: https://docs.bazel.build/versions/5.1.0/bzlmod.html
+
+Usage is best illustrated with an example using the {bzlmod}[bzlmod^] dependency management system in Bazel.
+
+TIP: You are not required to use Bazel to depend on Bedrock-RTL.
+You can also use the Verilog files directly in your own projects (e.g., with git submodule, git subtree, or some other method).
+
+In your project's `MODULE.bazel`:
+
+.`MODULE.bazel`
+[%collapsible]
+====
+[source,bzl]
+----
+module(name = "your-project")
+
+bazel_dep(name = "bedrock-rtl", version = "0.0.1")
+git_override(
+    module_name = "bedrock-rtl",
+    commit = <fill_in_git_commit_sha>,
+    remote = "https://github.com/xlsynth/bedrock-rtl",
+)
+
+rules_hdl_extension = use_extension("@bedrock-rtl//dependency_support/rules_hdl:extension.bzl", "rules_hdl_extension")
+use_repo(rules_hdl_extension, "rules_hdl")
+----
+====
+
+Then suppose you have the following SystemVerilog module called `datapath_join.sv`:
+
+.`datapath_join.sv`
+[%collapsible]
+====
+[source,verilog]
+----
+// An example design using two Bedrock-RTL modules: br_flow_reg_fwd and br_flow_join.
+//
+// Joins two or more equal-width datapaths into a single output datapath.
+// Uses ready/valid protocol on all flows.
+// Push-side is registered.
+
+`include "br_asserts.svh"
+
+module datapath_join #(
+    parameter int NumFlows = 2,  // must be at least 2
+    parameter int WidthPerFlow = 32  // must be at least 1
+) (
+    input logic clk,
+    input logic rst,
+    output logic [NumFlows-1:0] push_ready,
+    input logic [NumFlows-1:0] push_valid,
+    input logic [NumFlows-1:0][WidthPerFlow-1:0] push_data,
+    input logic pop_ready,
+    output logic pop_valid,
+    output logic [(NumFlows*WidthPerFlow)-1:0] pop_data
+);
+
+  `BR_ASSERT_STATIC(numflows_gte_2_a, NumFlows >= 2)
+  `BR_ASSERT_STATIC(widthperflow_gte_1_a, WidthPerFlow >= 1)
+
+  logic [NumFlows-1:0] inter_ready;
+  logic [NumFlows-1:0] inter_valid;
+  logic [NumFlows-1:0][WidthPerFlow-1:0] inter_data;
+
+  for (genvar i = 0; i < NumFlows; i++) begin : gen_regs
+    br_flow_reg_fwd #(
+        .Width(WidthPerFlow)
+    ) br_flow_reg_fwd (
+        .clk,
+        .rst,
+        .push_ready(push_ready[i]),
+        .push_valid(push_valid[i]),
+        .push_data (push_data[i]),
+        .pop_ready (inter_ready[i]),
+        .pop_valid (inter_valid[i]),
+        .pop_data  (inter_data[i])
+    );
+  end
+
+  br_flow_join #(
+      .NumFlows(NumFlows)
+  ) br_flow_join (
+      .clk,
+      .rst,
+      .push_ready(inter_ready),
+      .push_valid(inter_valid),
+      .pop_ready (pop_ready),
+      .pop_valid (pop_valid)
+  );
+
+  assign pop_data = inter_data;  // direct concat
+
+endmodule : datapath_join
+----
+====
+
+Your `BUILD.bazel` file could then do this:
+
+.`BUILD.bazel`
+[%collapsible]
+====
+[source,bzl]
+----
+load("@bedrock-rtl//bazel:verilog.bzl", "verilog_elab_and_lint_test_suite", "verilog_elab_test", "verilog_lint_test")
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+
+package(default_visibility = ["//visibility:private"])
+
+verilog_library(
+    name = "datapath_join",
+    srcs = ["datapath_join.sv"],
+    deps = [
+        "@bedrock-rtl//flow/rtl:br_flow_join",
+        "@bedrock-rtl//flow/rtl:br_flow_reg_fwd",
+        "@bedrock-rtl//macros:br_asserts",
+    ],
+)
+
+verilog_elab_test(
+    name = "datapath_join_elab_test",
+    deps = [":datapath_join"],
+)
+
+verilog_lint_test(
+    name = "datapath_join_lint_test",
+    deps = [":datapath_join"],
+)
+
+verilog_elab_and_lint_test_suite(
+    name = "datapath_join_test_suite",
+    params = {
+        "NumFlows": [
+            "2",
+            "3",
+        ],
+        "WidthPerFlow": [
+            "1",
+            "64",
+        ],
+    },
+    deps = [":datapath_join"],
+)
+----
+====
+
+== ChipStack-Generated Code
+
+Some test code in this repository was written and debugged with the assistance of tools by link:https://ChipStack.ai[ChipStack.ai].
+The relevant code is located in subdirectories named accordingly (e.g., `arb/sim/chipstack/`).
+The copyright is still held by the Bedrock-RTL authors and licensed the same as the rest of the code in this repository.
+Refer to the `LICENSE` file.
+
+== `macros`: Macros and Defines
+
+=== `br_registers.svh`: Flip-Flop Inference Macros
+
+These macros conveniently wrap `always_ff` blocks, improving readability and helping to structure user code into sequential and combinational portions.
+The macros are named according to the following suffix convention.
+
+* `A`: Asynchronous reset (if absent, then synchronous)
+* `I`: Initial value given (if absent, then 0)
+* `L`: Conditional load enable (if absent, then unconditional)
+* `N`: No reset (if absent, then reset)
+* `X`: Given explicit clock and reset names (if absent, then `clk` and either `rst` if synchronous or `arst` if asynchronous)
+
+IMPORTANT: Clocks are always positive-edge triggered.
+Resets are always active-high.
+
+NOTE: The order of the suffices generally matches the order of the arguments to the macro.
+The suffices are also listed in alphabetical order, with the exception of `L` before `I`.
+
+[cols="1,4,1,1"]
+|===
+| Macro/define | Description | Implemented | Tested
+
+| `BR_REGA`
+| Flip-flop register with unconditional load, asynchronous active-high reset named `arst`, initial value 0, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGALI`
+| Flip-flop register with conditional load enable, asynchronous active-high reset named `arst`, initial value given, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGAI`
+| Flip-flop register with unconditional load, asynchronous active-high reset named `arst`, initial value given, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGAL`
+| Flip-flop register with conditional load enable, asynchronous active-high reset named `arst`, initial value 0, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGLI`
+| Flip-flop register with conditional load enable, synchronous active-high reset named `rst`, initial value given, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGI`
+| Flip-flop register with unconditional load, synchronous active-high reset named `rst`, initial value given, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGLIX`
+| Flip-flop register with conditional load enable, synchronous active-high given reset, initial value given, positive-edge triggered given clock.
+| Yes
+| Yes
+
+| `BR_REGIX`
+| Flip-flop register with unconditional load, synchronous active-high given reset, initial value given, positive-edge triggered given clock.
+| Yes
+| Yes
+
+| `BR_REGLN`
+| Flip-flop register with load enable, no reset, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGLX`
+| Flip-flop register with conditional load enable, synchronous active-high reset, initial value 0, positive-edge triggered given clock.
+| Yes
+| Yes
+
+| `BR_REGL`
+| Flip-flop register with conditional load enable, synchronous active-high reset named `rst`, initial value 0, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGN`
+| Flip-flop register with unconditional load, no reset, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+| `BR_REGX`
+| Flip-flop register with unconditional load, synchronous active-high given reset, initial value 0, positive-edge triggered given clock.
+| Yes
+| Yes
+
+| `BR_REG`
+| Flip-flop register with unconditional load, synchronous active-high reset named `rst`, initial value 0, positive-edge triggered clock named `clk`.
+| Yes
+| Yes
+
+|===
+
+
+=== `br_asserts.svh`: Public Assertions
+
+These assertion macros are intended for use by the user in their own designs.
+They are guarded (enabled) by the following defines:
+
+* `BR_ASSERT_ON` -- if not defined, then all macros other than `BR_ASSERT_STATIC*`
+      are no-ops.
+* `BR_ENABLE_FPV` -- if not defined, then all `BR_*_FPV` macros are no-ops.
+* `BR_DISABLE_ASSERT_IMM` -- if defined, then all `BR_ASSERT_IMM*`, `BR_COVER_IMM*`,
+      `BR_ASSERT_COMB*`, and `BR_ASSERT_IMM*` macros are no-ops.
+* `BR_DISABLE_FINAL_CHECKS` -- if defined, then all `BR_ASSERT_FINAL*` macros are no-ops.
+
+TIP: It is recommended that users simply define `BR_ASSERT_ON` when integrating Bedrock modules into their designs.
+The other guards will typically not be necessary.
+
+IMPORTANT: Clocks are always positive-edge triggered.
+Resets are always active-high.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_ASSERT_STATIC`
+| Static (elaboration-time) assertion for use within modules
+
+| `BR_ASSERT_STATIC_IN_PACKAGE`
+| Static (elaboration-time) assertion for use within packages
+
+| `BR_ASSERT_FINAL`
+a| Immediate assertion evaluated at the end of simulation (e.g., when `$finish` is called).
+Disable by defining `BR_DISABLE_FINAL_CHECKS`.
+
+| `BR_ASSERT`
+| Concurrent assertion with implicit `clk` and `rst` names.
+
+| `BR_ASSERT_CR`
+| Concurrent assertion with explicit clock and reset names.
+
+| `BR_ASSERT_IMM`
+a| Immediate assertion.
+Also passes if the expression is unknown.
+Disable by defining `BR_DISABLE_ASSERT_IMM`.
+
+| `BR_ASSERT_COMB`
+a| Immediate assertion wrapped inside of an `always_comb` block.
+Also passes if the expression is unknown.
+Disable by defining `BR_DISABLE_ASSERT_IMM`.
+
+| `BR_COVER`
+| Concurrent cover with implicit `clk` and `rst` names.
+
+| `BR_COVER_CR`
+| Concurrent cover with explicit clock and reset names.
+
+| `BR_COVER_IMM`
+a| Immediate cover.
+Disable by defining `BR_DISABLE_ASSERT_IMM`.
+
+| `BR_COVER_COMB`
+a| Immediate cover wrapped inside of an `always_comb` block.
+Disable by defining `BR_DISABLE_ASSERT_IMM`.
+
+| `BR_ASSUME`
+| Concurrent assumption with implicit `clk` and `rst` names.
+
+| `BR_ASSUME_CR`
+| Concurrent assumption with explicit clock and reset names.
+
+| `BR_ASSERT_IN_RESET`
+a| Concurrent assertion that is active in reset and out of reset
+(but specifically intended for checking the former), with implicit `clk` name.
+
+| `BR_ASSERT_IN_RESET_C`
+a| Concurrent assertion that is active in reset and out of reset
+(but specifically intended for checking the former), with explicit clock name.
+
+|===
+
+==== FPV-only Wrappers
+
+These assertion macros are intended for use in formal verification monitors that might
+be integrated into a simulation environment, but where not all formal assertions should be used in simulation.
+They are guarded (enabled) by the following defines:
+
+* `BR_ENABLE_FPV` -- if not defined, then all BR_*_FPV macros are no-ops.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_ASSERT_FPV`
+| Wraps BR_ASSERT.
+
+| `BR_ASSERT_CR_FPV`
+| Wraps BR_ASSERT_CR.
+
+| `BR_ASSERT_COMB_FPV`
+| Wraps BR_ASSERT_COMB.
+
+| `BR_COVER_FPV`
+| Wraps BR_COVER.
+
+| `BR_COVER_CR_FPV`
+| Wraps BR_COVER_CR.
+
+| `BR_COVER_COMB_FPV`
+| Wraps BR_COVER_COMB.
+
+| `BR_ASSUME_FPV`
+| Wraps BR_ASSUME.
+
+| `BR_ASSUME_CR_FPV`
+| Wraps BR_ASSUME_CR.
+
+|===
+
+=== `br_asserts_internal.svh`: Bedrock-internal Assertions
+
+These assertion macros wrap the public assertions.
+They are intended only for internal use inside Bedrock libraries, but the user needs to know about them.
+They are guarded (enabled) by the following defines:
+
+The macros in this file are guarded with the following defines.
+* `BR_DISABLE_INTG_CHECKS` -- if defined, then all the BR_*_INTG checks are no-ops.
+* `BR_ENABLE_IMPL_CHECKS` -- if not defined, then all the BR_*_IMPL checks are no-ops.
+
+The intent is that users should not need to do anything, so that by default they will get only
+the integration checks but not the implementation checks.
+
+TIP: All of these macros wrap the public macros in `br_asserts.svh`, so they are also subject to the same global defines such as `BR_ASSERT_ON`.
+
+==== Integration Checks
+
+These checks are meant for checking the integration of a library module into an end user's design.
+Disable them globally by defining `BR_DISABLE_INTG_CHECKS`.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_ASSERT_INTG`
+| Wraps BR_ASSERT.
+
+| `BR_ASSERT_CR_INTG`
+| Wraps `BR_ASSERT_CR`.
+
+| `BR_ASSERT_KNOWN_INTG`
+| Wraps `BR_ASSERT_KNOWN`.
+
+| `BR_ASSERT_KNOWN_VALID_INTG`
+| Wraps `BR_ASSERT_KNOWN_VALID`.
+
+| `BR_ASSERT_KNOWN_CR_INTG`
+| Wraps `BR_ASSERT_KNOWN_CR`.
+
+| `BR_ASSERT_KNOWN_VALID_CR_INTG`
+| Wraps `BR_ASSERT_KNOWN_VALID_CR`.
+
+| `BR_ASSERT_COMB_INTG`
+| Wraps `BR_ASSERT_COMB`.
+
+| `BR_COVER_INTG`
+| Wraps `BR_COVER`.
+
+| `BR_COVER_CR_INTG`
+| Wraps `BR_COVER_CR`.
+
+| `BR_COVER_COMB_INTG`
+| Wraps `BR_COVER_COMB`.
+
+|===
+
+
+==== Implementation Checks
+
+These checks are meant for checking the implementation of a library module.
+Enable them globally by defining `BR_ENABLE_IMPL_CHECKS`.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_ASSERT_IMPL`
+| Wraps `BR_ASSERT`.
+
+| `BR_ASSERT_CR_IMPL`
+| Wraps `BR_ASSERT_CR`.
+
+| `BR_ASSERT_KNOWN_IMPL`
+| Wraps `BR_ASSERT_KNOWN`.
+
+| `BR_ASSERT_KNOWN_VALID_IMPL`
+| Wraps `BR_ASSERT_KNOWN_VALID`.
+
+| `BR_ASSERT_KNOWN_CR_IMPL`
+| Wraps `BR_ASSERT_KNOWN_CR`.
+
+| `BR_ASSERT_KNOWN_VALID_CR_IMPL`
+| Wraps `BR_ASSERT_KNOWN_VALID_CR`.
+
+| `BR_ASSERT_COMB_IMPL`
+| Wraps `BR_ASSERT_COMB`.
+
+| `BR_COVER_IMPL`
+| Wraps `BR_COVER`.
+
+| `BR_COVER_CR_IMPL`
+| Wraps `BR_COVER_CR`.
+
+| `BR_COVER_COMB_IMPL`
+| Wraps `BR_COVER_COMB`.
+
+|===
+
+=== `br_gates.svh`: Gate Convenience Wrappers
+
+These macros conveniently wrap module instantiations from the `gate` category.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_GATE_BUF`
+| Instantiates `br_gate_buf`.
+
+| `BR_GATE_CLK_BUF`
+| Instantiates `br_gate_clk_buf`.
+
+| `BR_GATE_INV`
+| Instantiates `br_gate_inv`.
+
+| `BR_GATE_AND2`
+| Instantiates `br_gate_and2`.
+
+| `BR_GATE_OR2`
+| Instantiates `br_gate_or2`.
+
+| `BR_GATE_XOR2`
+| Instantiates `br_gate_xor2`.
+
+| `BR_GATE_MUX2`
+| Instantiates `br_gate_mux2`.
+
+| `BR_GATE_CLK_MUX2`
+| Instantiates `br_gate_clk_mux2`.
+
+| `BR_GATE_ICG`
+| Instantiates `br_gate_icg`.
+
+|===
+
+=== `br_tieoff.svh`: Tie-off Convenience Wrappers
+
+These macros conveniently wrap `br_misc_tieoff*` module instantiations.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_TIEOFF_ZERO_NAMED`
+| Instantiates `br_tieoff_zero` with a given submodule instance suffix.
+
+| `BR_TIEOFF_ONE_NAMED`
+| Instantiates `br_tieoff_one` with a given submodule instance suffix.
+
+| `BR_TIEOFF_ZERO`
+| Instantiates `br_tieoff_zero` with a derived submodule instance suffix.
+
+| `BR_TIEOFF_ONE`
+| Instantiates `br_tieoff_one` with a derived submodule instance suffix.
+
+| `BR_TIEOFF_ZERO_TODO`
+a| Provided for convenience of the user grepping for `TODO` in the codebase, to help prevent accidental tie-offs that result in bugs.
+Instantiates `br_tieoff_zero` with a derived submodule instance suffix.
+
+| `BR_TIEOFF_ONE_TODO`
+a| Provided for convenience of the user grepping for `TODO` in the codebase, to help prevent accidental tie-offs that result in bugs.
+Instantiates `br_tieoff_one` with a derived submodule instance suffix.
+
+|===
+
+=== `br_unused.svh`: Unused Signal Convenience Wrappers
+
+These macros conveniently wrap `br_misc_unused` module instantiations.
+
+[cols="2,4"]
+|===
+| Macro/define | Description
+
+| `BR_UNUSED_NAMED`
+| Instantiates `br_misc_unused` with a given submodule instance suffix.
+
+| `BR_UNUSED`
+| Instantiates `br_misc_unused` with a derived submodule instance suffix.
+
+| `BR_UNUSED_TODO`
+a| Provided for convenience of the user grepping for `TODO` in the codebase, to help prevent accidental unused signals that result in bugs.
+Instantiates `br_misc_unused` with a derived submodule instance suffix.
+
+|===
+
+
+== Modules
+
+=== `arb`: Arbiters
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_arb_fixed`
+| Fixed priority
+| Yes
+
+| `br_arb_lru`
+| Least-recently used
+| Yes
+
+| `br_arb_rr`
+| Round-robin
+| Yes
+
+|===
+
+=== `cdc`: Clock Domain Crossings
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_cdc_bit_toggle`
+| Single-bit toggle CDC
+|
+
+| `br_cdc_fifo_ctrl_1r1w`
+a| Bus CDC using a dual-clock FIFO controller for a 1R1W dual-clock SRAM
+
+* Push flow control: ready/valid
+* Pop flow control: ready/valid
+|
+
+| `br_cdc_fifo_ctrl_1r1w_push_credit`
+a| Bus CDC using a dual-clock FIFO controller for a 1R1W dual-clock SRAM
+
+* Push flow control: credit/valid
+* Pop flow control: ready/valid
+|
+
+| `br_cdc_fifo_flops`
+a| Bus CDC using a dual-clock FIFO with internal flop-RAM
+
+* Push flow control: ready/valid
+* Pop flow control: ready/valid
+|
+
+| `br_cdc_fifo_flops_push_credit`
+a| Bus CDC using a dual-clock FIFO with internal flop-RAM
+
+* Push flow control: credit/valid
+* Pop flow control: ready/valid
+|
+
+|===
+
+=== `counter`: Wrapping and Saturating Counters
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_counter_decr`
+| Decrementing counter
+|
+
+| `br_counter_incr`
+| Incrementing counter
+|
+
+| `br_counter`
+| Up-down counter
+|
+
+|===
+
+=== `credit`: Credit/Valid Flow Control
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_credit_counter`
+| Credit counter
+|
+
+| `br_credit_receiver`
+| Credit/valid to ready/valid converter (credit-loop receiver-side)
+|
+
+| `br_credit_sender`
+| Ready/valid to credit/valid converter (credit-loop sender-side)
+|
+
+|===
+
+=== `delay`: Fixed-Delay Pipelines
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_delay_nr`
+| Without reset
+|
+
+| `br_delay_shift_reg`
+| Loadable shift register
+|
+
+| `br_delay`
+| With reset
+|
+
+| `br_delay_valid_next_nr`
+| With self-gating (valid-next) and without reset
+|
+
+| `br_delay_valid_next`
+| With self-gating (valid-next)
+|
+
+| `br_delay_valid_nr`
+| With self-gating (valid) and without reset
+|
+
+| `br_delay_valid`
+| With self-gating (valid)
+|
+
+|===
+
+=== `demux`: Simple Demultiplexers
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_demux_onehot`
+| One-hot demultiplexer
+|
+
+| `br_demux_bin`
+| Binary-select demultiplexer
+|
+
+|===
+
+=== `enc`: Combinational encoders
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_enc_bin2gray`
+| Binary to gray
+|
+
+| `br_enc_bin2onehot`
+| Binary to onehot
+|
+
+| `br_enc_countones`
+| Count the number of ones in a vector
+|
+
+| `br_enc_gray2bin`
+| Gray to binary
+|
+
+| `br_enc_onehot2bin`
+| One-hot to binary
+|
+
+| `br_enc_priority_encoder`
+| Priority encoder
+|
+
+|===
+
+=== `ecc`: Error Correcting Codes
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_ecc_secded_decoder`
+| Single-error-correcting, double-error-detecting (SECDED) decoder
+|
+
+| `br_ecc_secded_encoder`
+| Single-error-correcting, double-error-detecting (SECDED) encoder
+|
+
+| `br_ecc_sed_decoder`
+| Single-error-detecting (SED) decoder
+|
+
+| `br_ecc_sed_encoder`
+| Single-error-detecting (SED) encoder
+|
+
+|===
+
+=== `fifo`: First-In-First-Out Queues
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_fifo_ctrl_1r1w_push_credit`
+a| FIFO controller with external RAM port for 1R1W
+
+* Push flow control: credit/valid
+* Pop flow control: ready/valid
+|
+
+| `br_fifo_ctrl_1r1w`
+a| FIFO controller with external RAM port for 1R1W
+
+* Push flow control: ready/valid
+* Pop flow control: ready/valid
+|
+
+| `br_fifo_flops_push_credit`
+a| FIFO with internal flop RAM
+
+* Push flow control: credit/valid
+* Pop flow control: ready/valid
+|
+
+| `br_fifo_flops`
+a| FIFO with internal flop RAM
+
+* Push flow control: ready/valid
+* Pop flow control: ready/valid
+|
+
+
+|===
+
+=== `flow`: Ready/Valid Flow Control
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_flow_arb_fixed`
+| Fixed priority arbiter
+|
+
+| `br_flow_arb_lru`
+| Least-recently used arbiter
+|
+
+| `br_flow_arb_rr`
+| Round-robin arbiter
+|
+
+| `br_flow_demux_select`
+| Registered demultiplexer, external select
+|
+
+| `br_flow_demux_select_unstable`
+| Combinational demultiplexer, external select, with unstable flow control
+|
+
+| `br_flow_deserializer`
+| Deserialize a packet from a many narrow flits to fewer wide flits
+|
+
+| `br_flow_fork`
+| Datapath flow control split
+|
+
+| `br_flow_join`
+| Datapath flow control join
+|
+
+| `br_flow_mux_fixed`
+| Arbitrated multiplexer, fixed priority
+|
+
+| `br_flow_mux_lru`
+| Arbitrated multiplexer, least-recently used
+|
+
+| `br_flow_mux_rr`
+| Arbitrated multiplexer, round-robin
+|
+
+| `br_flow_mux_select`
+| Registered multiplexer, user select
+|
+
+| `br_flow_mux_select_unstable`
+| Combinational multiplexer, external select, with unstable flow control
+|
+
+| `br_flow_reg_both`
+| Pipeline register, registered forward and reverse signals
+|
+
+| `br_flow_reg_fwd`
+| Pipeline register, registered forward signals
+|
+
+| `br_flow_reg_rev`
+| Pipeline register, registered backward signals
+|
+
+| `br_flow_serializer`
+| Serialize a packet from a few wide flits to many narrow flits
+|
+
+|===
+
+=== `gate`: Behavioral Gate Primitives
+
+[cols="2,4"]
+|===
+| Module | Description
+
+| `br_gate_buf`
+| Wire buffer/repeater
+
+| `br_gate_clk_buf`
+| Clock wire buffer/repeater
+
+| `br_gate_inv`
+| Inverter
+
+| `br_gate_and2`
+| Two-input AND gate
+
+| `br_gate_or2`
+| Two-input OR gate
+
+| `br_gate_xor2`
+| Two-input XOR gate
+
+| `br_gate_mux2`
+| Two-input multiplexer
+
+| `br_gate_clk_mux2`
+| Two-input clock multiplexer
+
+| `br_gate_icg`
+| Integrated clock gate
+
+| `br_gate_icg_rst`
+| Integrated clock gate with synchronous reset
+
+| `br_gate_cdc_sync`
+| Clock domain crossing synchronizer cell
+
+| `br_gate_cdc_pseudostatic`
+| Buffer for clock domain crossings of pseudo-static nets
+
+| `br_gate_cdc_maxdel`
+| Buffer for clock domain crossings that indicate a given net should be checked for max delay (skew)
+
+|===
+
+=== `misc`: Miscellaneous
+
+[cols="1,4,1,1"]
+|===
+| Module | Description | Implemented | Verified
+
+| `br_misc_tieoff_one`
+| Drive an expression to constant 1s and internally waive relevant lint rules
+| Yes
+| Yes
+
+| `br_misc_tieoff_zero`
+| Drive an expression to constant 0s and internally waive relevant lint rules
+| Yes
+| Yes
+
+| `br_misc_unused`
+| Sink an unused expression and internally waive relevant lint rules
+| Yes
+| Yes
+
+|===
+
+=== `mux`: Simple Multiplexers
+
+[cols="1,4,1,1"]
+|===
+| Module | Description | Implemented | Verified
+
+| `br_mux_onehot`
+| One-hot multiplexer
+| Yes
+|
+
+| `br_mux_bin`
+| Binary-select multiplexer
+| Yes
+|
+
+|===
+
+=== `ram`: Memories
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_ram_addr_decoder`
+| Address decoder and optional write data steering for a tiled RAM
+|
+
+| `br_ram_data_rd_pipe`
+| Pipeline for reading data from a tiled RAM
+|
+
+| `br_ram_flops_1r1w_mock`
+a | Simplified version of `br_ram_flops` with single read port and single write
+port, but without physical-aware tiling and pipelining implementation (should
+not be synthesized)
+|
+
+| `br_ram_flops`
+| Tiled flop-RAM with one or more read ports and one or more write ports
+|
+
+| `br_ram_flops_tile`
+| One-tile flop-RAM with one or more read ports and one or more write ports
+|
+
+|===
+
+=== `tracker`: Tracking Data Structures
+
+[cols="1,4,1"]
+|===
+| Module | Description | Verified
+
+| `br_tracker_freelist`
+| Manages out-of-order allocation and deallocation of free list of identifiers/tags
+|
+
+|===
+
+== Packages
+
+=== `br_math`: Non-synthesizable Math Helper Functions
+
+[cols="1,4,1,1"]
+|===
+| Function | Description | Implemented | Tested
+
+| `ceil_div`
+| Return integer ceiling division
+| Yes
+| Yes
+
+| `floor_div`
+| Return integer floor division
+| Yes
+| Yes
+
+| `clogb`
+| Return integer ceiling of base-`b` logarithm where `b` is a power-of-2
+| Yes
+| Yes
+
+| `is_power_of_2`
+| Return 1 if an integer is a power of 2
+| Yes
+| Yes
+
+| `is_even`
+| Return 1 if an integer is even
+| Yes
+| Yes
+
+|===

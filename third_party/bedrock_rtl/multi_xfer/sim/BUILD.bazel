@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_sim_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+verilog_library(
+    name = "br_multi_xfer_reg_fwd_tb",
+    srcs = ["br_multi_xfer_reg_fwd_tb.sv"],
+    deps = [
+        "//misc/sim:br_test_driver",
+        "//multi_xfer/rtl:br_multi_xfer_reg_fwd",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_multi_xfer_reg_fwd_tb_elab_test",
+    tool = "verific",
+    deps = [":br_multi_xfer_reg_fwd_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_multi_xfer_reg_fwd_sim_test_tools_suite",
+    params = {
+        "NumSymbols": [
+            "2",
+            "4",
+        ],
+    },
+    tools = [
+        "iverilog",
+        "vcs",
+    ],
+    deps = [":br_multi_xfer_reg_fwd_tb"],
+)

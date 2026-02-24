@@ -1,0 +1,697 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_flow_arb_fixed",
+    srcs = ["br_flow_arb_fixed.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_fixed_internal",
+        "//flow/rtl/internal:br_flow_arb_core",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_arb_rr",
+    srcs = ["br_flow_arb_rr.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_rr_internal",
+        "//flow/rtl/internal:br_flow_arb_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_arb_lru",
+    srcs = ["br_flow_arb_lru.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_lru_internal",
+        "//flow/rtl/internal:br_flow_arb_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_demux_select",
+    srcs = ["br_flow_demux_select.sv"],
+    deps = [
+        ":br_flow_demux_select_unstable",
+        ":br_flow_reg_fwd",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_demux_select_unstable",
+    srcs = ["br_flow_demux_select_unstable.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_fork",
+    srcs = ["br_flow_fork.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_fork_select_multihot",
+    srcs = ["br_flow_fork_select_multihot.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_join",
+    srcs = ["br_flow_join.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_select",
+    srcs = ["br_flow_mux_select.sv"],
+    deps = [
+        ":br_flow_mux_select_unstable",
+        ":br_flow_reg_fwd",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_select_unstable",
+    srcs = ["br_flow_mux_select_unstable.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_fixed",
+    srcs = ["br_flow_mux_fixed.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_fixed_internal",
+        "//flow/rtl/internal:br_flow_mux_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_rr",
+    srcs = ["br_flow_mux_rr.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_rr_internal",
+        "//flow/rtl/internal:br_flow_mux_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_lru",
+    srcs = ["br_flow_mux_lru.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_lru_internal",
+        "//flow/rtl/internal:br_flow_mux_core",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_fixed_stable",
+    srcs = ["br_flow_mux_fixed_stable.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_fixed_internal",
+        "//flow/rtl/internal:br_flow_mux_core_stable",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_rr_stable",
+    srcs = ["br_flow_mux_rr_stable.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_rr_internal",
+        "//flow/rtl/internal:br_flow_mux_core_stable",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_mux_lru_stable",
+    srcs = ["br_flow_mux_lru_stable.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_lru_internal",
+        "//flow/rtl/internal:br_flow_mux_core_stable",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_reg_both",
+    srcs = ["br_flow_reg_both.sv"],
+    deps = [
+        ":br_flow_reg_fwd",
+        ":br_flow_reg_rev",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_reg_fwd",
+    srcs = ["br_flow_reg_fwd.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_reg_none",
+    srcs = ["br_flow_reg_none.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_reg_rev",
+    srcs = ["br_flow_reg_rev.sv"],
+    deps = [
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_serializer",
+    srcs = ["br_flow_serializer.sv"],
+    deps = [
+        "//counter/rtl:br_counter_incr",
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+        "//macros:br_unused",
+        "//mux/rtl:br_mux_bin",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_deserializer",
+    srcs = ["br_flow_deserializer.sv"],
+    deps = [
+        "//counter/rtl:br_counter_incr",
+        "//demux/rtl:br_demux_bin",
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//flow/rtl/internal:br_flow_checks_valid_data_intg",
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_tieoff",
+        "//mux/rtl:br_mux_bin",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_xbar_fixed",
+    srcs = ["br_flow_xbar_fixed.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_fixed_internal",
+        "//flow/rtl/internal:br_flow_xbar_core",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_xbar_rr",
+    srcs = ["br_flow_xbar_rr.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_rr_internal",
+        "//flow/rtl/internal:br_flow_xbar_core",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+verilog_library(
+    name = "br_flow_xbar_lru",
+    srcs = ["br_flow_xbar_lru.sv"],
+    deps = [
+        "//arb/rtl/internal:br_arb_lru_internal",
+        "//flow/rtl/internal:br_flow_xbar_core",
+        "//pkg:br_math_pkg",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_arb_fixed_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_flow_arb_fixed"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_arb_rr_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_flow_arb_rr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_arb_lru_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_flow_arb_lru"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_demux_select_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_demux_select"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_demux_select_unstable_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_demux_select_unstable"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_fork_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_flow_fork"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_fork_select_multihot_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+            "7",
+        ],
+        "EnableCoverSelectMultihot": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_fork_select_multihot"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_join_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_flow_join"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_select_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_mux_select"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_select_unstable_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_mux_select_unstable"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_fixed_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_mux_fixed"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_rr_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_mux_rr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_lru_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_mux_lru"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_fixed_stable_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+        "RegisterPopReady": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_mux_fixed_stable"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_rr_stable_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+        "RegisterPopReady": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_mux_rr_stable"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_mux_lru_stable_test_suite",
+    params = {
+        "NumFlows": [
+            "1",
+            "2",
+            "3",
+        ],
+        "Width": [
+            "1",
+            "2",
+        ],
+        "RegisterPopReady": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_mux_lru_stable"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_reg_both_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_reg_both"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_reg_fwd_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_reg_fwd"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_reg_none_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_reg_none"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_reg_rev_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_flow_reg_rev"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_serializer_test_suite",
+    params = {
+        "PushWidth": [
+            "4",
+            "8",
+            "12",
+        ],
+        "PopWidth": [
+            "4",
+        ],
+        "MetadataWidth": [
+            "1",
+        ],
+        "SerializeMostSignificantFirst": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_serializer"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_deserializer_test_suite",
+    params = {
+        "PushWidth": [
+            "4",
+        ],
+        "PopWidth": [
+            "4",
+            "8",
+            "12",
+        ],
+        "MetadataWidth": [
+            "1",
+        ],
+        "DeserializeMostSignificantFirst": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_deserializer"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_xbar_fixed_test_suite",
+    params = {
+        "NumPushFlows": [
+            "1",
+            "2",
+            "4",
+        ],
+        "NumPopFlows": [
+            "1",
+            "2",
+            "4",
+        ],
+        "Width": [
+            "5",
+            "8",
+        ],
+        "RegisterDemuxOutputs": [
+            "0",
+            "1",
+        ],
+        "RegisterPopOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_xbar_fixed"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_xbar_rr_test_suite",
+    params = {
+        "NumPushFlows": [
+            "1",
+            "2",
+            "4",
+        ],
+        "NumPopFlows": [
+            "1",
+            "2",
+            "4",
+        ],
+        "Width": [
+            "5",
+            "8",
+        ],
+        "RegisterDemuxOutputs": [
+            "0",
+            "1",
+        ],
+        "RegisterPopOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_xbar_rr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_flow_xbar_lru_test_suite",
+    params = {
+        "NumPushFlows": [
+            "1",
+            "2",
+            "4",
+        ],
+        "NumPopFlows": [
+            "1",
+            "2",
+            "4",
+        ],
+        "Width": [
+            "5",
+            "8",
+        ],
+        "RegisterDemuxOutputs": [
+            "0",
+            "1",
+        ],
+        "RegisterPopOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_flow_xbar_lru"],
+)

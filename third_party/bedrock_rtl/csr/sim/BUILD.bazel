@@ -1,0 +1,108 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_sim_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+verilog_library(
+    name = "br_csr_axil_widget_tb",
+    srcs = ["br_csr_axil_widget_tb.sv"],
+    deps = [
+        "//csr/rtl:br_csr_axil_widget",
+        "//misc/sim:br_test_driver",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_csr_axil_widget_tb_elab_test",
+    tool = "verific",
+    deps = [":br_csr_axil_widget_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_csr_axil_widget_sim_test_tools_suite",
+    params = {
+        "AddrWidth": ["16"],
+        "DataWidth": ["32"],
+        "RegisterResponseOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    tools = ["vcs"],
+    deps = [":br_csr_axil_widget_tb"],
+)
+
+verilog_library(
+    name = "br_csr_demux_tb",
+    srcs = ["br_csr_demux_tb.sv"],
+    deps = [
+        "//csr/rtl:br_csr_demux",
+        "//misc/sim:br_test_driver",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_csr_demux_tb_elab_test",
+    tool = "verific",
+    deps = [":br_csr_demux_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_csr_demux_sim_test_tools_suite",
+    params = {
+        "AddrWidth": ["16"],
+        "DataWidth": ["32"],
+        "NumDownstreams": [
+            "2",
+            "4",
+        ],
+        "NumRetimeStagesPerDownstream": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    tools = ["vcs"],
+    deps = [":br_csr_demux_tb"],
+)
+
+verilog_library(
+    name = "br_csr_mem_interface_tb",
+    srcs = ["br_csr_mem_interface_tb.sv"],
+    deps = [
+        "//csr/rtl:br_csr_mem_interface",
+        "//misc/sim:br_test_driver",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_csr_mem_interface_tb_elab_test",
+    tool = "verific",
+    deps = [":br_csr_mem_interface_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_csr_mem_interface_sim_test_tools_suite",
+    params = {
+        "CsrAddrWidth": ["16"],
+        "CsrDataWidth": [
+            "32",
+        ],
+        "MemWidth": [
+            "16",
+        ],
+        "RegisterMemOutputs": [
+            "0",
+            "1",
+        ],
+        "RegisterResponseOutputs": [
+            "0",
+            "1",
+        ],
+    },
+    tools = ["vcs"],
+    deps = [":br_csr_mem_interface_tb"],
+)
