@@ -1,0 +1,5 @@
+bazel-*
+MODULE.bazel.lock
+.vscode
+.spr.yml
+__pycache__
