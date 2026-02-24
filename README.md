@@ -1,5 +1,5 @@
 **Chiplib** is a collection of reusable hardware IP blocks implemented in
-SystemVerilog.
+synthesizable SystemVerilog.
 
 ## Bug Reports
 

@@ -1,0 +1,34 @@
+load(
+    "//util/bazel:verilog.bzl",
+    "verilog_library",
+    "verilog_lint_test",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "chiplib_arb_pri",
+    srcs = ["chiplib_arb_pri.sv"],
+)
+
+verilog_library(
+    name = "chiplib_arb_pri_pipe",
+    srcs = ["chiplib_arb_pri_pipe.sv"],
+    deps = [
+        ":chiplib_arb_pri",
+        "@bedrock-rtl//delay/rtl:br_delay_valid",
+        "@bedrock-rtl//mux/rtl:br_mux_onehot",
+    ],
+)
+
+verilog_lint_test(
+    name = "chiplib_arb_pri_lint_test",
+    top = "chiplib_arb_pri",
+    deps = [":chiplib_arb_pri"],
+)
+
+verilog_lint_test(
+    name = "chiplib_arb_pri_pipe_lint_test",
+    top = "chiplib_arb_pri_pipe",
+    deps = [":chiplib_arb_pri_pipe"],
+)

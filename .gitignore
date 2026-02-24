@@ -1,0 +1,8 @@
+bazel-*
+out
+
+*.swp
+
+__pycache__/
+*.py[oc]
+.venv

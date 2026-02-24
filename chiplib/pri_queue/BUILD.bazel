@@ -1,0 +1,35 @@
+load(
+    "//util/bazel:verilog.bzl",
+    "verilog_filelist",
+    "verilog_library",
+    "verilog_lint_test",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "chiplib_pri_queue",
+    srcs = [
+        # do not sort
+        "chiplib_pri_queue_mgr.sv",
+        "chiplib_pri_queue_push_ctl.sv",
+        "chiplib_pri_queue_pop_ctl.sv",
+        "chiplib_pri_queue.sv",
+    ],
+)
+
+verilog_filelist(
+    name = "chiplib_pri_queue_filelist",
+    deps = [":chiplib_pri_queue"],
+)
+
+verilog_lint_test(
+    name = "chiplib_pri_queue_lint_test",
+    params = {
+        "DataWidth": "32",
+        "PriorityWidth": "10",
+        "QueueDepth": "100",
+    },
+    top = "chiplib_pri_queue",
+    deps = [":chiplib_pri_queue"],
+)

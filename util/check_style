@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd $WORK
+
+VERILOG_SRC=$(git ls-files '*'.{v,sv,vh,svh} ':!third_party')
+BZL_SRC=$(git ls-files '*'.{bzl,bazel} ':!third_party')
+
+verible-verilog-lint -- $VERILOG_SRC
+
+verible-verilog-format --inplace --verify -- $VERILOG_SRC
+
+buildifier -mode check -lint warn -- $BZL_SRC

@@ -1,0 +1,53 @@
+reg irq_pri_t {
+  name = "Interrupt source priority";
+  field {
+    sw = rw;
+  } data[31:0];
+};
+
+reg irq_pend_t {
+  name = "Interrupt pending";
+  field {
+    sw = r;
+  } data[31:0];
+};
+
+reg irq_enable_t {
+  name = "Interrupt enable";
+  field {
+    sw = rw;
+  } data[31:0];
+};
+
+reg irq_thresh_t {
+  name = "Interrupt priority threshold";
+  field {
+    sw = rw;
+  } data[31:0];
+};
+
+reg irq_claim_complete_t {
+  name = "Interrupt claim/complete";
+  field {
+    sw = rw;
+  } data[31:0];
+};
+
+
+addrmap chiplib_riscv_plic {
+  littleendian;
+  default accesswidth = 32;
+
+  external irq_pri_t irq_pri[1024] @ 0;
+
+  external irq_pend_t irq_pend[32] @ 0x1000;
+
+  regfile {
+    external irq_enable_t irq_enable[32];
+  } irq_enable[128] @ 0x2000;
+
+  regfile {
+    external irq_thresh_t irq_thresh;
+    external irq_claim_complete_t irq_claim_complete;
+  } irq_ctl[128] @ 0x200000 += 0x1000;
+};
