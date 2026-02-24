@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# fv_fifo
+verilog_library(
+    name = "fv_fifo",
+    srcs = ["fv_fifo.sv"],
+)
+
+# Delays an input signal by a fixed number of clock cycles.
+verilog_library(
+    name = "fv_delay",
+    srcs = ["fv_delay.sv"],
+    deps = [
+        "//macros:br_registers",
+    ],
+)
+
+# 4-phase handshake
+verilog_library(
+    name = "fv_4phase_handshake",
+    srcs = ["fv_4phase_handshake.sv"],
+)
+
+# FV wolper coloring generator
+verilog_library(
+    name = "fv_wolper_coloring",
+    srcs = ["fv_wolper_coloring.sv"],
+    deps = [
+        "//macros:br_registers",
+    ],
+)

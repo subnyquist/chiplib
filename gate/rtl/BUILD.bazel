@@ -1,0 +1,147 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_gate_mock",
+    srcs = ["br_gate_mock.sv"],
+    deps = [
+        "//macros:br_asserts",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_buf_test_suite",
+    top = "br_gate_buf",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_clk_buf_test_suite",
+    top = "br_gate_clk_buf",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_inv_test_suite",
+    top = "br_gate_inv",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_clk_inv_test_suite",
+    top = "br_gate_clk_inv",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_and2_test_suite",
+    top = "br_gate_and2",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_or2_test_suite_basic",
+    top = "br_gate_or2",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_xor2_test_suite_basic",
+    top = "br_gate_xor2",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_mux2_test_suite",
+    top = "br_gate_mux2",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_clk_mux2_test_suite",
+    top = "br_gate_clk_mux2",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_icg_test_suite",
+    top = "br_gate_icg",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_icg_rst_test_suite",
+    top = "br_gate_icg_rst",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_cdc_sync_test_suite",
+    params = {
+        "NumStages": [
+            "2",
+            "3",
+        ],
+    },
+    top = "br_gate_cdc_sync",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_cdc_sync_arst_test_suite",
+    params = {
+        "NumStages": [
+            "2",
+            "3",
+        ],
+    },
+    top = "br_gate_cdc_sync_arst",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_cdc_pseudostatic_test_suite",
+    top = "br_gate_cdc_pseudostatic",
+    deps = [
+        ":br_gate_mock",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_gate_cdc_maxdel_test_suite",
+    top = "br_gate_cdc_maxdel",
+    deps = [
+        ":br_gate_mock",
+    ],
+)

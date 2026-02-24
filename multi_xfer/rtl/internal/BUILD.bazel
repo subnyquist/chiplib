@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_multi_xfer_checks_sendable_data_intg",
+    srcs = ["br_multi_xfer_checks_sendable_data_intg.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_unused",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_multi_xfer_checks_sendable_data_intg_test_suite",
+    disable_lint_rules = ["NO_OUTPUT"],
+    params = {
+        "NumSymbols": [
+            "1",
+            "2",
+            "3",
+        ],
+        "SymbolWidth": [
+            "1",
+            "3",
+            "8",
+        ],
+    },
+    deps = [
+        ":br_multi_xfer_checks_sendable_data_intg",
+    ],
+)
+
+verilog_library(
+    name = "br_multi_xfer_checks_sendable_data_impl",
+    srcs = ["br_multi_xfer_checks_sendable_data_impl.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+        "//macros:br_unused",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_multi_xfer_checks_sendable_data_impl_test_suite",
+    disable_lint_rules = ["NO_OUTPUT"],
+    params = {
+        "NumSymbols": [
+            "1",
+            "2",
+            "3",
+        ],
+        "SymbolWidth": [
+            "1",
+            "3",
+            "8",
+        ],
+    },
+    deps = [
+        ":br_multi_xfer_checks_sendable_data_impl",
+    ],
+)
+
+verilog_library(
+    name = "br_multi_xfer_distributor_core",
+    srcs = ["br_multi_xfer_distributor_core.sv"],
+    deps = [
+        ":br_multi_xfer_checks_sendable_data_intg",
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//macros:br_asserts_internal",
+        "//macros:br_tieoff",
+        "//mux/rtl:br_mux_onehot",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_multi_xfer_distributor_core_test_suite",
+    params = {
+        "NumSymbols": [
+            "2",
+            "3",
+        ],
+        "NumFlows": [
+            "3",
+            "4",
+        ],
+        "SymbolWidth": [
+            "1",
+            "3",
+            "8",
+        ],
+    },
+    deps = [
+        ":br_multi_xfer_distributor_core",
+    ],
+)

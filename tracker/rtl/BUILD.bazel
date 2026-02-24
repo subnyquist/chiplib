@@ -1,0 +1,208 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_tracker_freelist",
+    srcs = ["br_tracker_freelist.sv"],
+    deps = [
+        "//delay/rtl:br_delay",
+        "//enc/rtl:br_enc_bin2onehot",
+        "//enc/rtl:br_enc_countones",
+        "//enc/rtl:br_enc_onehot2bin",
+        "//enc/rtl:br_enc_priority_encoder",
+        "//flow/rtl:br_flow_reg_fwd",
+        "//multi_xfer/rtl:br_multi_xfer_reg_fwd",
+        "//mux/rtl:br_mux_onehot",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_tracker_freelist_test_suite",
+    params = {
+        "NumEntries": [
+            "5",
+            "8",
+        ],
+        "NumAllocPerCycle": [
+            "1",
+            "2",
+        ],
+        "NumDeallocPorts": [
+            "1",
+            "2",
+        ],
+        "RegisterAllocOutputs": [
+            "0",
+            "1",
+        ],
+        "EnableBypass": [
+            "0",
+            "1",
+        ],
+        "PreallocatedEntries": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_tracker_freelist"],
+)
+
+verilog_library(
+    name = "br_tracker_linked_list_ctrl",
+    srcs = ["br_tracker_linked_list_ctrl.sv"],
+    deps = [
+        "//counter/rtl:br_counter",
+        "//delay/rtl:br_delay_shift_reg",
+        "//delay/rtl:br_delay_valid",
+        "//enc/rtl:br_enc_countones",
+        "//enc/rtl:br_enc_priority_encoder",
+        "//flow/rtl/internal:br_flow_checks_valid_data_impl",
+        "//mux/rtl:br_mux_onehot",
+        "//shift/rtl:br_shift_rotate",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_tracker_linked_list_ctrl_test_suite",
+    params = {
+        "Depth": [
+            "5",
+            "8",
+        ],
+        "NumWritePorts": [
+            "1",
+            "2",
+            "3",
+        ],
+        "NumLinkedLists": [
+            "1",
+            "2",
+            "4",
+        ],
+        "RamReadLatency": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_tracker_linked_list_ctrl"],
+)
+
+verilog_library(
+    name = "br_tracker_reorder",
+    srcs = ["br_tracker_reorder.sv"],
+    deps = [
+        ":br_tracker_sequence",
+        "//counter/rtl:br_counter_incr",
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_tracker_reorder_test_suite",
+    params = {
+        "NumEntries": [
+            "2",
+            "3",
+            "4",
+        ],
+        "EntryIdWidth": [
+            "2",
+        ],
+    },
+    deps = [":br_tracker_reorder"],
+)
+
+verilog_library(
+    name = "br_tracker_reorder_buffer_ctrl_1r1w",
+    srcs = ["br_tracker_reorder_buffer_ctrl_1r1w.sv"],
+    deps = [
+        ":br_tracker_reorder",
+        "//credit/rtl:br_credit_sender",
+        "//delay/rtl:br_delay",
+        "//fifo/rtl:br_fifo_flops_push_credit",
+        "//macros:br_asserts",
+        "//macros:br_unused",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_tracker_reorder_buffer_ctrl_1r1w_test_suite",
+    params = {
+        "NumEntries": [
+            "2",
+            "3",
+            "4",
+        ],
+        "EntryIdWidth": [
+            "2",
+        ],
+        "RamReadLatency": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_tracker_reorder_buffer_ctrl_1r1w"],
+)
+
+verilog_library(
+    name = "br_tracker_reorder_buffer_flops",
+    srcs = ["br_tracker_reorder_buffer_flops.sv"],
+    deps = [
+        ":br_tracker_reorder_buffer_ctrl_1r1w",
+        "//ram/rtl:br_ram_flops",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_tracker_reorder_buffer_flops_test_suite",
+    params = {
+        "NumEntries": [
+            "2",
+            "3",
+            "4",
+        ],
+        "EntryIdWidth": [
+            "2",
+        ],
+    },
+    deps = [":br_tracker_reorder_buffer_flops"],
+)
+
+verilog_library(
+    name = "br_tracker_sequence",
+    srcs = ["br_tracker_sequence.sv"],
+    deps = [
+        "//counter/rtl:br_counter",
+        "//counter/rtl:br_counter_incr",
+        "//macros:br_asserts",
+        "//macros:br_asserts_internal",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_tracker_sequence_test_suite",
+    params = {
+        "NumEntries": [
+            "2",
+            "3",
+            "4",
+        ],
+        "EntryIdWidth": [
+            "2",
+            "3",
+        ],
+        "MaxAllocSize": [
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_tracker_sequence"],
+)

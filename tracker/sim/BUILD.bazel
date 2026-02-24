@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_sim_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+verilog_library(
+    name = "br_tracker_freelist_tb",
+    srcs = ["br_tracker_freelist_tb.sv"],
+    deps = [
+        "//misc/sim:br_test_driver",
+        "//tracker/rtl:br_tracker_freelist",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_tracker_freelist_tb_elab_test",
+    tool = "verific",
+    deps = [":br_tracker_freelist_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_tracker_freelist_sim_test_tools_suite",
+    params = {
+        "NumEntries": [
+            "12",
+        ],
+        "NumAllocPerCycle": [
+            "1",
+            "2",
+            "3",
+        ],
+        "NumDeallocPorts": [
+            "1",
+            "2",
+        ],
+        "RegisterAllocOutputs": [
+            "0",
+            "1",
+        ],
+        "EnableBypass": [
+            "0",
+            "1",
+        ],
+    },
+    # TODO: iverilog does not work
+    tools = ["vcs"],
+    deps = [":br_tracker_freelist_tb"],
+)
+
+verilog_library(
+    name = "br_tracker_linked_list_ctrl_tb",
+    srcs = ["br_tracker_linked_list_ctrl_tb.sv"],
+    deps = [
+        "//misc/sim:br_test_driver",
+        "//ram/rtl:br_ram_flops",
+        "//tracker/rtl:br_tracker_linked_list_ctrl",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_tracker_linked_list_ctrl_tb_elab_test",
+    tool = "verific",
+    deps = [":br_tracker_linked_list_ctrl_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_tracker_linked_list_ctrl_sim_test_tools_suite",
+    params = {
+        "NumLinkedLists": [
+            "1",
+            "2",
+        ],
+        "Depth": [
+            "8",
+        ],
+        "NumWritePorts": [
+            "1",
+            "2",
+            "3",
+        ],
+        "RamReadLatency": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    tools = [
+        "iverilog",
+        "vcs",
+    ],
+    deps = [":br_tracker_linked_list_ctrl_tb"],
+)
+
+verilog_library(
+    name = "br_tracker_reorder_buffer_flops_tb",
+    srcs = ["br_tracker_reorder_buffer_flops_tb.sv"],
+    deps = ["//tracker/rtl:br_tracker_reorder_buffer_flops"],
+)
+
+verilog_elab_test(
+    name = "br_tracker_reorder_buffer_flops_tb_elab_test",
+    tool = "verific",
+    deps = [":br_tracker_reorder_buffer_flops_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_tracker_reorder_buffer_flops_sim_test_tools_suite",
+    tools = [
+        "vcs",
+    ],
+    deps = [":br_tracker_reorder_buffer_flops_tb"],
+)

@@ -1,0 +1,94 @@
+// SPDX-License-Identifier: Apache-2.0
+
+
+// Bedrock-RTL 1R1W Reorder Buffer Controller
+
+`include "br_asserts.svh"
+`include "br_registers.svh"
+
+module br_tracker_reorder_buffer_ctrl_1r1w_fpv_monitor #(
+    parameter int NumEntries = 2,
+    parameter int EntryIdWidth = $clog2(NumEntries),
+    parameter int DataWidth = 1,
+    parameter int RamReadLatency = 0,
+    parameter bit RegisterPopOutputs = 0,
+    parameter bit EnableAssertFinalNotDeallocValid = 1,
+    localparam int MinEntryIdWidth = $clog2(NumEntries),
+    localparam int EntryCountWidth = $clog2(NumEntries + 1)
+) (
+    input logic clk,
+    input logic rst,
+
+    // Allocation Interface
+    input logic alloc_ready,
+    input logic alloc_valid,
+    input logic [EntryIdWidth-1:0] alloc_entry_id,
+
+    // Unordered Response Interface
+    input logic unordered_resp_push_valid,
+    input logic [EntryIdWidth-1:0] unordered_resp_push_entry_id,
+    input logic [DataWidth-1:0] unordered_resp_push_data,
+
+    // Unordered Response Interface
+    input logic reordered_resp_pop_ready,
+    input logic reordered_resp_pop_valid,
+    input logic [DataWidth-1:0] reordered_resp_pop_data,
+
+    // Count Information
+    input logic resp_pending,
+
+    // 1R1W RAM Interface
+    input logic [MinEntryIdWidth-1:0] ram_wr_addr,
+    input logic ram_wr_valid,
+    input logic [DataWidth-1:0] ram_wr_data,
+    input logic [MinEntryIdWidth-1:0] ram_rd_addr,
+    input logic ram_rd_addr_valid,
+    input logic [DataWidth-1:0] ram_rd_data,
+    input logic ram_rd_data_valid
+);
+
+  // ----------FV Modeling Code----------
+  logic [NumEntries-1:0][DataWidth-1:0] fv_ram_data;
+
+  `BR_REGLN(fv_ram_data[ram_wr_addr], ram_wr_data, ram_wr_valid)
+
+  // ----------FV assumptions----------
+  if (RamReadLatency == 0) begin : gen_latency0
+    `BR_ASSUME(ram_rd_data_a, ram_rd_data == fv_ram_data[ram_rd_addr])
+    `BR_ASSUME(ram_rd_data_addr_latency_a, ram_rd_data_valid == ram_rd_addr_valid)
+  end else begin : gen_latency_non0
+    `BR_ASSUME(ram_rd_data_a, ram_rd_data == $past(fv_ram_data[ram_rd_addr], RamReadLatency))
+    `BR_ASSUME(ram_rd_data_addr_latency_a, ram_rd_data_valid == $past(
+               ram_rd_addr_valid, RamReadLatency))
+  end
+
+  // ----------tracker reorder buffer basic checks----------
+  br_tracker_reorder_buffer_basic_fpv_monitor #(
+      .NumEntries(NumEntries),
+      .EntryIdWidth(EntryIdWidth),
+      .DataWidth(DataWidth),
+      .RamReadLatency(RamReadLatency)
+  ) fv_checker (
+      .clk,
+      .rst,
+      .alloc_ready,
+      .alloc_valid,
+      .alloc_entry_id,
+      .unordered_resp_push_valid,
+      .unordered_resp_push_entry_id,
+      .unordered_resp_push_data,
+      .reordered_resp_pop_ready,
+      .reordered_resp_pop_valid,
+      .reordered_resp_pop_data,
+      .resp_pending
+  );
+
+endmodule : br_tracker_reorder_buffer_ctrl_1r1w_fpv_monitor
+
+bind br_tracker_reorder_buffer_ctrl_1r1w br_tracker_reorder_buffer_ctrl_1r1w_fpv_monitor #(
+    .NumEntries(NumEntries),
+    .EntryIdWidth(EntryIdWidth),
+    .DataWidth(DataWidth),
+    .RamReadLatency(RamReadLatency),
+    .EnableAssertFinalNotDeallocValid(EnableAssertFinalNotDeallocValid)
+) monitor (.*);

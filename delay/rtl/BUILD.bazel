@@ -1,0 +1,229 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_elab_and_lint_test_suite")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "br_delay",
+    srcs = ["br_delay.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_nr",
+    srcs = ["br_delay_nr.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_valid",
+    srcs = ["br_delay_valid.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_valid_nr",
+    srcs = ["br_delay_valid_nr.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_valid_next",
+    srcs = ["br_delay_valid_next.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_valid_next_nr",
+    srcs = ["br_delay_valid_next_nr.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_shift_reg",
+    srcs = ["br_delay_shift_reg.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_skew",
+    srcs = ["br_delay_skew.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+verilog_library(
+    name = "br_delay_deskew",
+    srcs = ["br_delay_deskew.sv"],
+    deps = [
+        "//macros:br_asserts_internal",
+        "//macros:br_registers",
+    ],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_delay"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_nr_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_delay_nr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_valid_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "0",
+            "1",
+            "2",
+        ],
+        "FirstStageUngated": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_delay_valid"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_valid_nr_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "0",
+            "1",
+            "2",
+        ],
+        "FirstStageUngated": [
+            "0",
+            "1",
+        ],
+    },
+    deps = [":br_delay_valid_nr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_valid_next_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_delay_valid_next"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_valid_next_nr_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "0",
+            "1",
+            "2",
+        ],
+    },
+    deps = [":br_delay_valid_next_nr"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_shift_reg_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+        "NumStages": [
+            "1",
+            "2",
+            "3",
+        ],
+    },
+    deps = [":br_delay_shift_reg"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_skew_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+    },
+    deps = [":br_delay_skew"],
+)
+
+br_verilog_elab_and_lint_test_suite(
+    name = "br_delay_deskew_test_suite",
+    params = {
+        "Width": [
+            "1",
+            "8",
+        ],
+    },
+    deps = [":br_delay_deskew"],
+)

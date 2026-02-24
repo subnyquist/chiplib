@@ -1,0 +1,191 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_fpv_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+# Bedrock-RTL Delay Line
+
+verilog_library(
+    name = "br_delay_fpv_monitor",
+    srcs = ["br_delay_fpv_monitor.sv"],
+    deps = [
+        "//delay/rtl:br_delay",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_delay_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_delay_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_delay_test_suite",
+    params = {
+        "NumStages": [
+            "0",
+            "1",
+            "5",
+        ],
+        "Width": [
+            "1",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "",
+    },
+    top = "br_delay",
+    deps = [":br_delay_fpv_monitor"],
+)
+
+# Bedrock-RTL Delay Line (No Reset)
+
+verilog_library(
+    name = "br_delay_nr_fpv_monitor",
+    srcs = ["br_delay_nr_fpv_monitor.sv"],
+    deps = [
+        "//delay/rtl:br_delay_nr",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_delay_nr_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_delay_nr_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_delay_nr_test_suite",
+    params = {
+        "NumStages": [
+            "0",
+            "1",
+            "5",
+        ],
+        "Width": [
+            "1",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "br_delay_nr_fpv.jg.tcl",
+    },
+    top = "br_delay_nr",
+    deps = [":br_delay_nr_fpv_monitor"],
+)
+
+# Bedrock-RTL Delay Line (With Valid)
+
+verilog_library(
+    name = "br_delay_valid_fpv_monitor",
+    srcs = ["br_delay_valid_fpv_monitor.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_delay_valid_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_delay_valid_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_delay_valid_test_suite",
+    params = {
+        "NumStages": [
+            "0",
+            "1",
+            "5",
+        ],
+        "Width": [
+            "1",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "",
+    },
+    top = "br_delay_valid",
+    deps = [":br_delay_valid_fpv_monitor"],
+)
+
+# Bedrock-RTL Delay Line (With Valid-Next)
+
+verilog_library(
+    name = "br_delay_valid_next_fpv_monitor",
+    srcs = ["br_delay_valid_next_fpv_monitor.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid_next",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_delay_valid_next_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_delay_valid_next_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_delay_valid_next_test_suite",
+    params = {
+        "NumStages": [
+            "0",
+            "1",
+            "5",
+        ],
+        "Width": [
+            "1",
+            "6",
+        ],
+    },
+    tools = {
+        "jg": "",
+    },
+    top = "br_delay_valid_next",
+    deps = [":br_delay_valid_next_fpv_monitor"],
+)
+
+# Bedrock-RTL Delay Line (With Valid-Next, No Reset)
+verilog_library(
+    name = "br_delay_valid_next_nr_fpv_monitor",
+    srcs = ["br_delay_valid_next_nr_fpv_monitor.sv"],
+    deps = [
+        "//delay/rtl:br_delay_valid_next_nr",
+        "//macros:br_fv",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_delay_valid_next_nr_fpv_monitor_elab_test",
+    tool = "verific",
+    deps = [":br_delay_valid_next_nr_fpv_monitor"],
+)
+
+br_verilog_fpv_test_tools_suite(
+    name = "br_delay_valid_next_nr_test_suite",
+    params = {
+        "NumStages": [
+            "0",
+            "1",
+            "5",
+        ],
+        "Width": [
+            "1",
+            "5",
+        ],
+    },
+    tools = {
+        "jg": "br_delay_nr_fpv.jg.tcl",
+    },
+    top = "br_delay_valid_next_nr",
+    deps = [":br_delay_valid_next_nr_fpv_monitor"],
+)

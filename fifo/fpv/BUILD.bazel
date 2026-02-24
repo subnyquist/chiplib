@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# credit_receiver checkers
+verilog_library(
+    name = "br_credit_receiver_fpv_monitor",
+    srcs = ["br_credit_receiver_fpv_monitor.sv"],
+    deps = [
+        "//pkg:br_math_pkg",
+    ],
+)
+
+# FV Ram model
+verilog_library(
+    name = "br_fifo_fv_ram",
+    srcs = ["br_fifo_fv_ram.sv"],
+    deps = [
+        "//pkg:br_math_pkg",
+    ],
+)
+
+filegroup(
+    name = "br_ram_invariant_tcl",
+    srcs = ["br_ram_invariant.tcl"],
+)

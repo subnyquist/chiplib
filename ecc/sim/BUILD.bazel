@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_hdl//verilog:providers.bzl", "verilog_library")
+load("//bazel:br_verilog.bzl", "br_verilog_sim_test_tools_suite")
+load("//bazel:verilog.bzl", "verilog_elab_test")
+
+package(default_visibility = ["//visibility:private"])
+
+##################
+# SED
+##################
+verilog_library(
+    name = "br_ecc_sed_encoder_decoder_tb",
+    srcs = ["br_ecc_sed_encoder_decoder_tb.sv"],
+    deps = [
+        "//ecc/rtl:br_ecc_sed_decoder",
+        "//ecc/rtl:br_ecc_sed_encoder",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_ecc_sed_encoder_decoder_tb_elab_test",
+    tool = "verific",
+    deps = [":br_ecc_sed_encoder_decoder_tb"],
+)
+
+br_verilog_sim_test_tools_suite(
+    name = "br_ecc_sed_encoder_decoder_sim_test_tools_suite",
+    params = {
+        "DataWidth": [
+            "1",
+            "2",
+            "5",
+            "8",
+        ],
+    },
+    tools = [
+        "iverilog",
+        "vcs",
+    ],
+    deps = [":br_ecc_sed_encoder_decoder_tb"],
+)
+
+##################
+# SECDED
+##################
+verilog_library(
+    name = "br_ecc_secded_encoder_decoder_tb",
+    srcs = ["br_ecc_secded_encoder_decoder_tb.sv"],
+    deps = [
+        "//ecc/rtl:br_ecc_secded_decoder",
+        "//ecc/rtl:br_ecc_secded_encoder",
+        "//pkg:br_ecc_secded_pkg",
+    ],
+)
+
+verilog_elab_test(
+    name = "br_ecc_secded_encoder_decoder_tb_elab_test",
+    tool = "verific",
+    deps = [":br_ecc_secded_encoder_decoder_tb"],
+)
+
+K = [
+    # Generated configs
+    "4",
+    "8",
+    "11",
+    "16",
+    "26",
+    "32",
+    "57",
+    "64",
+    "120",
+    "128",
+    "247",
+    "256",
+    "502",
+    "512",
+    "1013",
+    "1024",
+    # Padded configs
+    "9",
+    "68",
+]
+
+[
+    br_verilog_sim_test_tools_suite(
+        name = "br_ecc_secded_encoder_decoder_sim_test_tools_suite",
+        params = {"DataWidth": [k]},
+        seed = 42,
+        # iverilog is really slow on these tests :(
+        tools = ["vcs"],
+        deps = [":br_ecc_secded_encoder_decoder_tb"],
+    )
+    for k in K
+]
