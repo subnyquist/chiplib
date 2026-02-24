@@ -1,0 +1,7 @@
+{# Displays the copyright information (which is defined in conf.py). #}
+{% if show_copyright and copyright %}
+  <p class="copyright">
+    © {{ copyright|e }}.
+    <a href="{{ pathto('license') }}">Licensed</a> for non-commercial use.
+  </p>
+{% endif %}
