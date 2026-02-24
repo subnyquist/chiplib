@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+package(default_visibility = ["//visibility:private"])
+
+filegroup(
+    name = "matrices",
+    srcs = glob(["**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+# Generated message widths (k)
+K = [
+    "4",
+    "8",
+    "11",
+    "16",
+    "26",
+    "32",
+    "57",
+    "64",
+    "120",
+    "128",
+    "247",
+    "256",
+    "502",
+    "512",
+    "1013",
+    "1024",
+]
+
+GOLDEN_HSIAO_G_K_FILES = ["hsiao_G_k" + k + ".txt" for k in K]
+
+GOLDEN_HSIAO_H_K_FILES = ["hsiao_H_k" + k + ".txt" for k in K]
+
+GENERATED_HSIAO_G_K_FILES = ["gen_hsiao_G_k" + k + ".txt" for k in K]
+
+GENERATED_HSIAO_H_K_FILES = ["gen_hsiao_H_k" + k + ".txt" for k in K]
+
+[
+    [
+        diff_test(
+            name = "hsiao_G_k" + k + "_diff_test",
+            failure_message = "Golden hsiao_G_k" + k + ".txt does not match the generated code. Please run `bazel run //eccgen/matrices:update` to automatically update the golden.",
+            file1 = "hsiao_G_k" + k + ".txt",
+            file2 = ":gen_hsiao_G_k" + k + ".txt",
+        ),
+        diff_test(
+            name = "hsiao_H_k" + k + "_diff_test",
+            failure_message = "Golden hsiao_H_k" + k + ".txt does not match the generated code. Please run `bazel run //eccgen/matrices:update` to automatically update the golden.",
+            file1 = "hsiao_H_k" + k + ".txt",
+            file2 = ":gen_hsiao_H_k" + k + ".txt",
+        ),
+        genrule(
+            name = "gen_hsiao_k" + k,
+            outs = [
+                "gen_hsiao_G_k" + k + ".txt",
+                "gen_hsiao_H_k" + k + ".txt",
+            ],
+            cmd = "$(location //eccgen) -k " + k + " -s hsiao_secded -G=$(location gen_hsiao_G_k" + k + ".txt) -H=$(location gen_hsiao_H_k" + k + ".txt)",
+            tools = ["//eccgen"],
+        ),
+    ]
+    for k in K
+]
+
+write_file(
+    name = "gen_update.sh",
+    out = "update.sh",
+    content = [
+                  "#!/usr/bin/env bash",
+                  "cd $BUILD_WORKSPACE_DIRECTORY",
+              ] + ["cp -fv bazel-bin/eccgen/matrices/gen_hsiao_G_k" + k + ".txt eccgen/matrices/hsiao_G_k" + k + ".txt" for k in K] +
+              ["cp -fv bazel-bin/eccgen/matrices/gen_hsiao_H_k" + k + ".txt eccgen/matrices/hsiao_H_k" + k + ".txt" for k in K],
+)
+
+sh_binary(
+    name = "update",
+    srcs = [":update.sh"],
+    data = GOLDEN_HSIAO_G_K_FILES + GENERATED_HSIAO_G_K_FILES + GOLDEN_HSIAO_H_K_FILES + GENERATED_HSIAO_H_K_FILES,
+)
