@@ -1,0 +1,20 @@
+module(name = "chiplib")
+
+bazel_dep(name = "bedrock-rtl")
+bazel_dep(name = "eccgen")
+
+local_path_override(
+    module_name = "bedrock-rtl",
+    path = "third_party/bedrock_rtl",
+)
+
+local_path_override(
+    module_name = "eccgen",
+    path = "third_party/bedrock_eccgen",
+)
+
+rules_hdl_extension = use_extension(
+    "@bedrock-rtl//dependency_support/rules_hdl:extension.bzl",
+    "rules_hdl_extension",
+)
+use_repo(rules_hdl_extension, "rules_hdl")

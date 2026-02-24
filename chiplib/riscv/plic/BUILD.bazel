@@ -1,0 +1,39 @@
+load(
+    "//util/bazel:verilog.bzl",
+    "verilog_filelist",
+    "verilog_library",
+    "verilog_lint_test",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "chiplib_riscv_plic",
+    srcs = [
+        # do not sort
+        "chiplib_riscv_plic_reg_ctl.sv",
+        "chiplib_riscv_plic_gateway.sv",
+        "chiplib_riscv_plic_arb.sv",
+        "chiplib_riscv_plic.sv",
+    ],
+    deps = [
+        "//chiplib/arb:chiplib_arb_pri_pipe",
+        "//chiplib/riscv/plic/reg:chiplib_riscv_plic_reg",
+    ],
+)
+
+verilog_filelist(
+    name = "chiplib_riscv_plic_filelist",
+    deps = [":chiplib_riscv_plic"],
+)
+
+verilog_lint_test(
+    name = "chiplib_riscv_plic_lint_test",
+    params = {
+        "NumSources": "30",
+        "NumTargets": "5",
+        "PriorityWidth": "6",
+    },
+    top = "chiplib_riscv_plic",
+    deps = [":chiplib_riscv_plic"],
+)

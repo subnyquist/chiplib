@@ -1,0 +1,39 @@
+load("//util/bazel:systemrdl.bzl", "systemrdl_html", "systemrdl_regblock")
+load("//util/bazel:verilog.bzl", "verilog_library")
+
+package(default_visibility = ["//visibility:public"])
+
+verilog_library(
+    name = "chiplib_riscv_plic",
+    srcs = ["chiplib_riscv_plic.rdl"],
+    visibility = ["//visibility:private"],
+)
+
+systemrdl_regblock(
+    name = "chiplib_riscv_plic_reg_src",
+    addr_width = "26",
+    cpuif = "axi4-lite-flat",
+    outdir = ".",
+    outputs = [
+        "chiplib_riscv_plic_reg_pkg.sv",
+        "chiplib_riscv_plic_reg.sv",
+    ],
+    top = "chiplib_riscv_plic",
+    deps = [":chiplib_riscv_plic"],
+)
+
+systemrdl_html(
+    name = "chiplib_riscv_plic_html",
+    outdir = ".",
+    title = "'chiplib_riscv_plic - register map'",
+    top = "chiplib_riscv_plic",
+    deps = [":chiplib_riscv_plic"],
+)
+
+verilog_library(
+    name = "chiplib_riscv_plic_reg",
+    srcs = [
+        "chiplib_riscv_plic_reg.sv",
+        "chiplib_riscv_plic_reg_pkg.sv",
+    ],
+)

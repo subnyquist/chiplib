@@ -1,0 +1,112 @@
+reg irq_pri_t {
+  name = "Interrupt Priority";
+  desc = "Array of interrupt priorities for up to 1024 interrupt sources. A
+          higher priority value indicates higher interrupt priority. The
+          priority value of 0 is reserved to mean \"never interrupt\".
+
+          Writes to nonexistent interrupt sources are ignored. For interrupts
+          that support a subset of priority values, the non-writable bits are
+          masked to 0.";
+
+  field {
+    sw = rw;
+  } value[31:0] = 32'b0;
+};
+
+reg irq_pend_t {
+  name = "Interrupt Pending";
+  desc = "Array of interrupt pending bits for up to 1024 interrupt sources. The
+          pending bit for interrupt source *n* is stored in bit (*n* mod 32) at
+          index floor(*n* / 32).
+
+          A value of 1 indicates that an interrupt is pending from the source.
+          It is cleared when a target claims the interrupt by reading its
+          associated claim register.";
+
+  field {
+    sw = r;
+  } value[31:0];
+};
+
+reg irq_enable_t {
+  name = "Interrupt Enable";
+  desc = "Per-target array of interrupt enable bits for up to 1024 interrupt
+          sources. The enable bit for interrupt source *n* is stored in bit
+          (*n* mod 32) at index floor(*n* / 32).
+
+          Setting a value of 1 enables the interrupt source for the associated
+          target. Writes to enable bits of interrupt sources that are not
+          routable to a target are ignored.";
+
+  field {
+    sw = rw;
+  } value[31:0] = 32'b0;
+};
+
+reg irq_pri_thresh_t {
+  name = "Interrupt Priority Threshold";
+  desc = "Sets the interrupt priority threshold for a specific target. Any
+          interrupt with priority value less than or equal to a target's
+          threshold priority is not routed to the target.";
+
+  field {
+    sw = rw;
+  } value[31:0] = 32'b0;
+};
+
+reg irq_claim_t {
+  name = "Interrupt Claim";
+  desc = "Reading this register returns the ID of the highest-priority pending
+          interrupt for a specific target, and clears the pending bit of the
+          corresponding interrupt source. If no interrupt is pending, then a
+          value of 0 is returned.";
+
+  field {
+    sw = r;
+  } value[31:0];
+};
+
+reg irq_complete_t {
+  name = "Interrupt Complete";
+  desc = "Writing an interrupt ID to this register indicates the completion of
+          the corresponding interrupt source. Additional interrupts can be
+          forwarded from an interrupt source only after receiving a
+          completion.";
+
+  field {
+    sw = w;
+  } value[31:0];
+};
+
+
+addrmap chiplib_riscv_plic {
+  name = "Chiplib RISC-V PLIC Memory Map";
+  desc = "Memory-mapped control and status registers for Chiplib RISC-V PLIC.
+          Controls interrupt prioritization, routing, and claim/complete
+          processes.";
+
+
+  littleendian;
+  default accesswidth = 32;
+
+  external irq_pri_t irq_pri[1024] @ 0;
+
+  external irq_pend_t irq_pend[32] @ 0x1000;
+
+  regfile {
+    name = "Interrupt Enable Register File";
+    desc = "Array of interrupt enable registers for up to 128 targets.";
+
+    external irq_enable_t irq_enable[32];
+  } irq_enable[128] @ 0x2000;
+
+  regfile {
+    name = "Interrupt Control Register File";
+    desc = "Array of priority threshold, claim, and complete registers for up to
+            128 targets";
+
+    external irq_pri_thresh_t irq_pri_thresh @ 0;
+    external irq_claim_t irq_claim @ 4;
+    external irq_complete_t irq_complete @ 4;
+  } irq_ctl[128] @ 0x200000 += 0x1000;
+};
