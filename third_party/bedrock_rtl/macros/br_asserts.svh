@@ -28,22 +28,7 @@ import uvm_pkg::*;
 //       BR_ASSERT_COMB*, and BR_ASSERT_IMM* macros are no-ops.
 // * BR_DISABLE_FINAL_CHECKS -- if defined, then all BR_ASSERT_FINAL macros are no-ops.
 
-////////////////////////////////////////////////////////////////////////////////
-// Static (elaboration-time) assertion macros
-////////////////////////////////////////////////////////////////////////////////
-
 `define BR_NOOP
-
-`define BR_ASSERT_STATIC(__name__, __expr__) \
-if (!(__expr__)) begin : gen__``__name__ \
-__BR_ASSERT_STATIC_FAILED__``__name__ __BR_ASSERT_STATIC_FAILED__``__name__ (); \
-end
-
-`define BR_ASSERT_STATIC_IN_PACKAGE(__name__, __expr__) \
-typedef enum logic [1:0] { \
-    __BR_ASSERT_STATIC_IN_PACKAGE_OK__``__name__ = ((__expr__) ? 1 : 0), \
-    __BR_ASSERT_STATIC_IN_PACKAGE_FAILED__``__name__ = 0 \
-} __br_static_assert_enum__``__name__;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Assertion error printing macros
@@ -67,6 +52,21 @@ $error($sformatf("Bedrock-RTL assertion macro failed (%0s:%0d) [%0s]: %0s", `__F
 `define BR_ASSERT_ERROR(__name__, __expr__) \
 `BR_ASSERT_BUILTIN_ERROR(__name__, __expr__)
 `endif // UVM_MAJOR_REV
+
+////////////////////////////////////////////////////////////////////////////////
+// Static (elaboration-time) assertion macros
+////////////////////////////////////////////////////////////////////////////////
+
+`define BR_ASSERT_STATIC(__name__, __expr__) \
+if (!(__expr__)) begin : gen__``__name__ \
+`BR_ASSERT_BUILTIN_ERROR(__name__, __expr__); \
+end
+
+`define BR_ASSERT_STATIC_IN_PACKAGE(__name__, __expr__) \
+typedef enum logic [1:0] { \
+    __BR_ASSERT_STATIC_IN_PACKAGE_OK__``__name__ = ((__expr__) ? 1 : 0), \
+    __BR_ASSERT_STATIC_IN_PACKAGE_FAILED__``__name__ = 0 \
+} __br_static_assert_enum__``__name__;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Final assertion macros (end of test)
